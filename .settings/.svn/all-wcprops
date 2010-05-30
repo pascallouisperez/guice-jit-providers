@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 33
+/svn/!svn/ver/134/trunk/.settings
+END
+org.eclipse.jdt.core.prefs
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/14/trunk/.settings/org.eclipse.jdt.core.prefs
+END
+org.eclipse.jdt.ui.prefs
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/134/trunk/.settings/org.eclipse.jdt.ui.prefs
+END
+org.eclipse.ltk.core.refactoring.prefs
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/26/trunk/.settings/org.eclipse.ltk.core.refactoring.prefs
+END
