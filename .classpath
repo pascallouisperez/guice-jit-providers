@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="test"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/aopalliance.jar"/>
+	<classpathentry kind="lib" path="lib/build/asm-3.1.jar"/>
+	<classpathentry kind="lib" path="lib/build/bnd-0.0.384.jar"/>
+	<classpathentry kind="lib" path="lib/build/cglib-2.2.1-snapshot.jar"/>
+	<classpathentry kind="lib" path="lib/build/commons-logging-1.0.4.jar"/>
+	<classpathentry kind="lib" path="lib/build/easymock.jar"/>
+	<classpathentry kind="lib" path="lib/build/jarjar-1.0rc8.jar"/>
+	<classpathentry kind="lib" path="lib/build/junit.jar"/>
+	<classpathentry kind="lib" path="lib/build/munge.jar"/>
+	<classpathentry kind="lib" path="lib/build/safesax.jar"/>
+	<classpathentry kind="lib" path="lib/build/spring-beans.jar"/>
+	<classpathentry kind="lib" path="lib/build/spring-core.jar"/>
+	<classpathentry kind="lib" path="lib/javax.inject.jar"/>
+	<classpathentry kind="lib" path="lib/build/javax.inject-tck.jar"/>
+	<classpathentry kind="lib" path="lib/build/felix-2.0.5.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
