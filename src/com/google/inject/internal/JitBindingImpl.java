@@ -16,19 +16,27 @@
 
 package com.google.inject.internal;
 
+import static com.google.inject.internal.Preconditions.checkNotNull;
+
 import com.google.inject.JitBinding;
+import com.google.inject.JitProvider;
 import com.google.inject.spi.BindingScopingVisitor;
+import com.google.inject.spi.ElementVisitor;
 
 /**
  * Default implementation of a just-in-time binding.
  *
  */
 public abstract class JitBindingImpl<T> implements JitBinding<T> {
+  private final Object source;
   private Scoping scoping;
 
-  protected JitBindingImpl() {
+  protected JitBindingImpl(Object source) {
+    this.source = checkNotNull(source, "source");
     this.scoping = Scoping.UNSCOPED;
   }
+
+  public abstract JitProvider<T> getJitProvider(InjectorImpl injector, Errors errors);
 
   public void withScoping(Scoping scoping) {
     this.scoping = scoping;
@@ -38,7 +46,15 @@ public abstract class JitBindingImpl<T> implements JitBinding<T> {
     return scoping;
   }
 
+  public Object getSource() {
+    return source;
+  }
+
   public <V> V acceptScopingVisitor(BindingScopingVisitor<V> visitor) {
     return scoping.acceptVisitor(visitor);
+  }
+
+  public <V> V acceptVisitor(ElementVisitor<V> visitor) {
+    return visitor.visit(this);
   }
 }

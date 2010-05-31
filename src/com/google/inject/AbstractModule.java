@@ -258,7 +258,7 @@ public abstract class AbstractModule implements Module {
    * @see Binder#bindJitProvider(java.lang.Class)
    * @since 3.0?
    */
-  protected SimplifiedScopedBindingBuilder bindJitProvider(Class<? extends JitProvider<?>> type) {
+  protected <T> SimplifiedScopedBindingBuilder bindJitProvider(Class<? extends JitProvider<T>> type) {
     return binder.bindJitProvider(type);
   }
 
@@ -266,7 +266,7 @@ public abstract class AbstractModule implements Module {
    * @see Binder#bindJitProvider(TypeLiteral)
    * @since 3.0?
    */
-  protected SimplifiedScopedBindingBuilder bindJitProvider(TypeLiteral<? extends JitProvider<?>> typeLiteral) {
+  protected <T> SimplifiedScopedBindingBuilder bindJitProvider(TypeLiteral<? extends JitProvider<T>> typeLiteral) {
     return binder.bindJitProvider(typeLiteral);
   }
 
@@ -274,7 +274,7 @@ public abstract class AbstractModule implements Module {
    * @see Binder#bindJitProvider(Key)
    * @since 3.0?
    */
-  protected SimplifiedScopedBindingBuilder bindJitProvider(Key<? extends JitProvider<?>> key) {
+  protected <T> SimplifiedScopedBindingBuilder bindJitProvider(Key<? extends JitProvider<T>> key) {
     return binder.bindJitProvider(key);
   }
 
@@ -283,7 +283,7 @@ public abstract class AbstractModule implements Module {
    * @see Binder#bindJitProvider(com.google.inject.JitProvider)
    * @since 3.0?
    */
-  protected SimplifiedScopedBindingBuilder bindJitProvider(JitProvider<?> jitProvider) {
+  protected <T> SimplifiedScopedBindingBuilder bindJitProvider(JitProvider<T> jitProvider) {
     return binder.bindJitProvider(jitProvider);
   }
 }

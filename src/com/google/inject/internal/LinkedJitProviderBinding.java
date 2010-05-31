@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package com.google.inject.spi;
+package com.google.inject.internal;
 
 import static com.google.inject.internal.Preconditions.checkNotNull;
 
 import com.google.inject.Binder;
 import com.google.inject.JitProvider;
-import com.google.inject.internal.JitBindingImpl;
+import com.google.inject.Key;
+import com.google.inject.Provider;
 
 /**
  * TODO(pascal): clean documentation.
@@ -28,29 +29,25 @@ import com.google.inject.internal.JitBindingImpl;
  * @author pascal@kaching.com (Pascal-Louis Perez)
  * @since 3.0?
  */
-public final class JitProviderInstanceBinding<T> extends JitBindingImpl<T> {
-  private final Object source;
-  private final JitProvider<T> jitProvider;
+public final class LinkedJitProviderBinding<T> extends JitBindingImpl<T> {
+  private final Key<? extends JitProvider<T>> jitProviderKey;
 
-  JitProviderInstanceBinding(
-      Object source, JitProvider<T> jitProvider) {
-    this.source = checkNotNull(source, "source");
-    this.jitProvider = checkNotNull(jitProvider, "jit provider");
+  public LinkedJitProviderBinding(
+      Object source, Key<? extends JitProvider<T>> jitProviderKey) {
+    super(source);
+    this.jitProviderKey = checkNotNull(jitProviderKey, "jit provider key");
   }
 
-  public Object getSource() {
-    return source;
-  }
-
-  public JitProvider<T> getJitProvider() {
-    return jitProvider;
+  public JitProvider<T> getJitProvider(InjectorImpl injector, Errors errors) {
+    try {
+      Provider<? extends JitProvider<T>> provider = injector.getProviderOrThrow(jitProviderKey, errors);
+      return provider == null ? null : provider.get();
+    } catch (ErrorsException e) {
+      return null;
+    }
   }
 
   public void applyTo(Binder binder) {
-    binder.withSource(getSource()).bindJitProvider(jitProvider);
-  }
-
-  public <V> V acceptVisitor(ElementVisitor<V> visitor) {
-    return visitor.visit(this);
+    binder.withSource(getSource()).bindJitProvider(jitProviderKey);
   }
 }

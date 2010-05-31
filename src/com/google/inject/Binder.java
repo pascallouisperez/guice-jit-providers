@@ -381,7 +381,7 @@ public interface Binder {
    * @param type type of the just-in-time provider
    * @since 3.0?
    */
-  SimplifiedScopedBindingBuilder bindJitProvider(Class<? extends JitProvider<?>> type);
+  <T> SimplifiedScopedBindingBuilder bindJitProvider(Class<? extends JitProvider<T>> type);
 
   /**
    * Binds a just-in-time provider. The injector will use the given just-in-time
@@ -390,7 +390,7 @@ public interface Binder {
    * @param typeLiteral type literal of the just-in-time provider
    * @since 3.0?
    */
-  SimplifiedScopedBindingBuilder bindJitProvider(TypeLiteral<? extends JitProvider<?>> typeLiteral);
+  <T> SimplifiedScopedBindingBuilder bindJitProvider(TypeLiteral<? extends JitProvider<T>> typeLiteral);
 
   /**
    * Binds a just-in-time provider. The injector will use the given just-in-time
@@ -399,7 +399,7 @@ public interface Binder {
    * @param key key of the just-in-time provider
    * @since 3.0?
    */
-  SimplifiedScopedBindingBuilder bindJitProvider(Key<? extends JitProvider<?>> key);
+  <T> SimplifiedScopedBindingBuilder bindJitProvider(Key<? extends JitProvider<T>> key);
 
   /**
    * Binds a just-in-time provider. The injector will use the given just-in-time
@@ -408,7 +408,7 @@ public interface Binder {
    * @param jitProvider the just-in-time provider
    * @since 3.0?
    */
-  SimplifiedScopedBindingBuilder bindJitProvider(JitProvider<?> jitProvider);
+  <T> SimplifiedScopedBindingBuilder bindJitProvider(JitProvider<T> jitProvider);
 
   /**
    * Returns a binder that uses {@code source} as the reference location for

@@ -50,6 +50,9 @@ import com.google.inject.internal.Errors;
 import com.google.inject.internal.ExposureBuilder;
 import com.google.inject.internal.ImmutableList;
 import com.google.inject.internal.JitBindingBuilder;
+import com.google.inject.internal.JitBindingImpl;
+import com.google.inject.internal.JitProviderInstanceBinding;
+import com.google.inject.internal.LinkedJitProviderBinding;
 import com.google.inject.internal.Lists;
 import com.google.inject.internal.PrivateElementsImpl;
 import com.google.inject.internal.ProviderMethodsModule;
@@ -211,20 +214,23 @@ public final class Elements {
       elements.add(new TypeListenerBinding(getSource(), listener, typeMatcher));
     }
 
-    public SimplifiedScopedBindingBuilder bindJitProvider(Class<? extends JitProvider<?>> type) {
+    public <T> SimplifiedScopedBindingBuilder bindJitProvider(Class<? extends JitProvider<T>> type) {
       return bindJitProvider(Key.get(type));
     }
 
-    public SimplifiedScopedBindingBuilder bindJitProvider(TypeLiteral<? extends JitProvider<?>> typeLiteral) {
+    public <T> SimplifiedScopedBindingBuilder bindJitProvider(TypeLiteral<? extends JitProvider<T>> typeLiteral) {
       return bindJitProvider(Key.get(typeLiteral));
     }
 
-    public SimplifiedScopedBindingBuilder bindJitProvider(Key<? extends JitProvider<?>> key) {
-      throw new UnsupportedOperationException();
+    public <T> SimplifiedScopedBindingBuilder bindJitProvider(Key<? extends JitProvider<T>> key) {
+      return createJitBindingBuilder(new LinkedJitProviderBinding<T>(getSource(), key));
     }
 
-    public SimplifiedScopedBindingBuilder bindJitProvider(JitProvider<?> jitProvider) {
-      JitProviderInstanceBinding binding = new JitProviderInstanceBinding(getSource(), jitProvider);
+    public <T> SimplifiedScopedBindingBuilder bindJitProvider(JitProvider<T> jitProvider) {
+      return createJitBindingBuilder(new JitProviderInstanceBinding<T>(getSource(), jitProvider));
+    }
+
+    private JitBindingBuilder createJitBindingBuilder(JitBindingImpl<?> binding) {
       elements.add(binding);
       return new JitBindingBuilder(binding);
     }

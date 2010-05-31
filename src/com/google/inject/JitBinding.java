@@ -27,16 +27,10 @@ import com.google.inject.spi.Element;
 public interface JitBinding<T> extends Element {
 
   /**
-   * Gets the just-in-time provider.
-   */
-  JitProvider<T> getJitProvider();
-
-  /**
    * Accepts a scoping visitor. Invokes the visitor method specific to this binding's scoping.
    *
    * @param visitor to call back on
    * @since 2.0
    */
   <V> V acceptScopingVisitor(BindingScopingVisitor<V> visitor);
-
 }

@@ -16,30 +16,31 @@
 
 package com.google.inject.internal;
 
-import java.lang.annotation.Annotation;
+import static com.google.inject.internal.Preconditions.checkNotNull;
 
-import com.google.inject.Scope;
-import com.google.inject.binder.SimplifiedScopedBindingBuilder;
+import com.google.inject.Binder;
+import com.google.inject.JitProvider;
 
 /**
- * Bind a just-in-time provider.
+ * TODO(pascal): clean documentation.
  *
  * @author pascal@kaching.com (Pascal-Louis Perez)
+ * @since 3.0?
  */
-public class JitBindingBuilder implements SimplifiedScopedBindingBuilder {
+public final class JitProviderInstanceBinding<T> extends JitBindingImpl<T> {
+  private final JitProvider<T> jitProvider;
 
-  private final JitBindingImpl<?> binding;
-
-  public JitBindingBuilder(JitBindingImpl<?> binding) {
-    this.binding = binding;
+  public JitProviderInstanceBinding(
+      Object source, JitProvider<T> jitProvider) {
+    super(source);
+    this.jitProvider = checkNotNull(jitProvider, "jit provider");
   }
 
-  public void in(Class<? extends Annotation> scopeAnnotation) {
-    binding.withScoping(Scoping.forAnnotation(scopeAnnotation));
+  public JitProvider<T> getJitProvider(InjectorImpl injector, Errors errors) {
+    return jitProvider;
   }
 
-  public void in(Scope scope) {
-    binding.withScoping(Scoping.forInstance(scope));
+  public void applyTo(Binder binder) {
+    binder.withSource(getSource()).bindJitProvider(jitProvider);
   }
-
 }
