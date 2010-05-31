@@ -11,16 +11,34 @@ import junit.framework.TestCase;
  */
 public class JitProvidersTest extends TestCase {
 
-  public void testExplicitJitProviderBindingByClass() {
+  public void testExplicitJitProviderBindingByClassScopingByAnnotation() {
     assertExplicitJitProviderBinding(new AbstractModule() {
       @Override
       protected void configure() {
-        bindJitProvider(FactoryJitProvider.class);
+        bindJitProvider(FactoryJitProvider.class).in(Singleton.class);
       }
     });
   }
 
-  public void testExplicitJitProviderBindingByInstance() {
+  public void testExplicitJitProviderBindingByClassScopingByInstance() {
+    assertExplicitJitProviderBinding(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bindJitProvider(FactoryJitProvider.class).in(Scopes.SINGLETON);
+      }
+    });
+  }
+
+  public void testExplicitJitProviderBindingByInstanceScopingByAnnotation() {
+    assertExplicitJitProviderBinding(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bindJitProvider(new FactoryJitProvider()).in(Singleton.class);
+      }
+    });
+  }
+
+  public void testExplicitJitProviderBindingByInstanceScopingByInstance() {
     assertExplicitJitProviderBinding(new AbstractModule() {
       @Override
       protected void configure() {
