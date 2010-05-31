@@ -16,6 +16,12 @@
 
 package com.google.inject;
 
+import java.util.Enumeration;
+import java.util.Set;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
+
 import com.google.inject.internal.FinalizableReferenceQueueTest;
 import com.google.inject.internal.ImmutableSet;
 import com.google.inject.internal.Jsr166HashMapTest;
@@ -40,12 +46,8 @@ import com.google.inject.spi.ToolStageInjectorTest;
 import com.google.inject.util.NoopOverrideTest;
 import com.google.inject.util.ProvidersTest;
 import com.google.inject.util.TypesTest;
-import com.googlecode.guice.Jsr330Test;
 import com.googlecode.guice.GuiceTck;
-import java.util.Enumeration;
-import java.util.Set;
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import com.googlecode.guice.Jsr330Test;
 
 /**
  * @author crazybob@google.com (Bob Lee)
@@ -76,6 +78,7 @@ public class AllTests {
     suite.addTestSuite(TypeListenerTest.class);
     suite.addTestSuite(InjectorTest.class);
     suite.addTestSuite(JitBindingsTest.class);
+    suite.addTestSuite(JitProvidersTest.class);
     // IntegrationTest is AOP-only
     suite.addTestSuite(KeyTest.class);
     suite.addTestSuite(LoggerInjectionTest.class);

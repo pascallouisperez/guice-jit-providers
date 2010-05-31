@@ -16,17 +16,20 @@
 
 package com.google.inject;
 
+import static com.google.inject.internal.Preconditions.checkNotNull;
+import static com.google.inject.internal.Preconditions.checkState;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+
 import com.google.inject.binder.AnnotatedBindingBuilder;
 import com.google.inject.binder.AnnotatedConstantBindingBuilder;
 import com.google.inject.binder.LinkedBindingBuilder;
-import static com.google.inject.internal.Preconditions.checkNotNull;
-import static com.google.inject.internal.Preconditions.checkState;
+import com.google.inject.binder.SimplifiedScopedBindingBuilder;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.spi.Message;
 import com.google.inject.spi.TypeConverter;
 import com.google.inject.spi.TypeListener;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 
 /**
  * A support class for {@link Module}s which reduces repetition and results in
@@ -126,7 +129,7 @@ public abstract class AbstractModule implements Module {
   }
 
   /**
-   * @see Binder#addError(Throwable) 
+   * @see Binder#addError(Throwable)
    */
   protected void addError(Throwable t) {
     binder.addError(t);
@@ -218,7 +221,7 @@ public abstract class AbstractModule implements Module {
   }
 
   /**
-   * @see Binder#currentStage() 
+   * @see Binder#currentStage()
    * @since 2.0
    */
   protected Stage currentStage() {
@@ -249,5 +252,38 @@ public abstract class AbstractModule implements Module {
   protected void bindListener(Matcher<? super TypeLiteral<?>> typeMatcher,
       TypeListener listener) {
     binder.bindListener(typeMatcher, listener);
+  }
+
+  /**
+   * @see Binder#bindJitProvider(java.lang.Class)
+   * @since 3.0?
+   */
+  protected SimplifiedScopedBindingBuilder bindJitProvider(Class<? extends JitProvider<?>> type) {
+    return binder.bindJitProvider(type);
+  }
+
+  /**
+   * @see Binder#bindJitProvider(TypeLiteral)
+   * @since 3.0?
+   */
+  protected SimplifiedScopedBindingBuilder bindJitProvider(TypeLiteral<? extends JitProvider<?>> typeLiteral) {
+    return binder.bindJitProvider(typeLiteral);
+  }
+
+  /**
+   * @see Binder#bindJitProvider(Key)
+   * @since 3.0?
+   */
+  protected SimplifiedScopedBindingBuilder bindJitProvider(Key<? extends JitProvider<?>> key) {
+    return binder.bindJitProvider(key);
+  }
+
+  /**
+   * @return
+   * @see Binder#bindJitProvider(com.google.inject.JitProvider)
+   * @since 3.0?
+   */
+  protected SimplifiedScopedBindingBuilder bindJitProvider(JitProvider<?> jitProvider) {
+    return binder.bindJitProvider(jitProvider);
   }
 }

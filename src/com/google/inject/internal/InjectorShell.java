@@ -16,17 +16,21 @@
 
 package com.google.inject.internal;
 
-import com.google.inject.Binder;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.Module;
-import com.google.inject.Provider;
 import static com.google.inject.Scopes.SINGLETON;
-import com.google.inject.Singleton;
-import com.google.inject.Stage;
 import static com.google.inject.internal.Preconditions.checkNotNull;
 import static com.google.inject.internal.Preconditions.checkState;
 
+import java.util.List;
+import java.util.logging.Logger;
+
+import com.google.inject.Binder;
+import com.google.inject.Injector;
+import com.google.inject.InjectorBuilder;
+import com.google.inject.Key;
+import com.google.inject.Module;
+import com.google.inject.Provider;
+import com.google.inject.Singleton;
+import com.google.inject.Stage;
 import com.google.inject.internal.InternalInjectorCreator.InjectorOptions;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.Element;
@@ -34,8 +38,6 @@ import com.google.inject.spi.Elements;
 import com.google.inject.spi.InjectionPoint;
 import com.google.inject.spi.PrivateElements;
 import com.google.inject.spi.TypeListenerBinding;
-import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * A partially-initialized injector. See {@link InjectorBuilder}, which uses this to build a tree
@@ -82,7 +84,7 @@ final class InjectorShell {
       this.options = parent.options;
       return this;
     }
-    
+
     Builder setInjectorOptions(InjectorOptions options) {
       this.options = options;
       return this;
@@ -99,7 +101,7 @@ final class InjectorShell {
         this.modules.add(module);
       }
     }
-    
+
     InjectorOptions getInjectorOptions() {
       return options;
     }
@@ -153,6 +155,9 @@ final class InjectorShell {
 
       new TypeConverterBindingProcessor(errors).process(injector, elements);
       stopwatch.resetAndLog("Converters creation");
+
+      new JitProviderProcessor(errors).process(injector, elements);
+      stopwatch.resetAndLog("JIT providers creation");
 
       bindInjector(injector);
       bindLogger(injector);

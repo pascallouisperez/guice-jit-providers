@@ -16,14 +16,15 @@
 
 package com.google.inject.internal;
 
+import java.lang.annotation.Annotation;
+import java.util.List;
+import java.util.Map;
+
 import com.google.inject.Binding;
 import com.google.inject.Key;
 import com.google.inject.Scope;
 import com.google.inject.TypeLiteral;
 import com.google.inject.spi.TypeListenerBinding;
-import java.lang.annotation.Annotation;
-import java.util.List;
-import java.util.Map;
 
 /**
  * The inheritable data within an injector. This class is intended to allow parent and local
@@ -47,6 +48,14 @@ interface State {
     }
 
     public void putBinding(Key<?> key, BindingImpl<?> binding) {
+      throw new UnsupportedOperationException();
+    }
+
+    public List<JitBindingImpl<?>> getJitBindingsThisLevel() {
+      return ImmutableList.of();
+    }
+
+    public void addJitBinding(JitBindingImpl<?> jitBinding) {
       throw new UnsupportedOperationException();
     }
 
@@ -114,6 +123,11 @@ interface State {
   Map<Key<?>, Binding<?>> getExplicitBindingsThisLevel();
 
   void putBinding(Key<?> key, BindingImpl<?> binding);
+
+  /** Returns the just-in-time bindings at this level only. */
+  List<JitBindingImpl<?>> getJitBindingsThisLevel();
+
+  void addJitBinding(JitBindingImpl<?> jitBinding);
 
   /** Returns the matching scope, or null. */
   Scope getScope(Class<? extends Annotation> scopingAnnotation);

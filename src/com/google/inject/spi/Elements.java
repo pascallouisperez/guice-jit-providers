@@ -16,9 +16,20 @@
 
 package com.google.inject.spi;
 
+import static com.google.inject.internal.Preconditions.checkArgument;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Binder;
 import com.google.inject.Binding;
+import com.google.inject.JitProvider;
 import com.google.inject.Key;
 import com.google.inject.MembersInjector;
 import com.google.inject.Module;
@@ -31,26 +42,20 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 import com.google.inject.binder.AnnotatedConstantBindingBuilder;
 import com.google.inject.binder.AnnotatedElementBuilder;
+import com.google.inject.binder.SimplifiedScopedBindingBuilder;
 import com.google.inject.internal.AbstractBindingBuilder;
 import com.google.inject.internal.BindingBuilder;
 import com.google.inject.internal.ConstantBindingBuilderImpl;
 import com.google.inject.internal.Errors;
+import com.google.inject.internal.ExposureBuilder;
 import com.google.inject.internal.ImmutableList;
+import com.google.inject.internal.JitBindingBuilder;
 import com.google.inject.internal.Lists;
-import static com.google.inject.internal.Preconditions.checkArgument;
 import com.google.inject.internal.PrivateElementsImpl;
 import com.google.inject.internal.ProviderMethodsModule;
 import com.google.inject.internal.Sets;
 import com.google.inject.internal.SourceProvider;
-import com.google.inject.internal.ExposureBuilder;
 import com.google.inject.matcher.Matcher;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Exposes elements of a module so they can be inspected, validated or {@link
@@ -204,6 +209,24 @@ public final class Elements {
 
     public void bindListener(Matcher<? super TypeLiteral<?>> typeMatcher, TypeListener listener) {
       elements.add(new TypeListenerBinding(getSource(), listener, typeMatcher));
+    }
+
+    public SimplifiedScopedBindingBuilder bindJitProvider(Class<? extends JitProvider<?>> type) {
+      return bindJitProvider(Key.get(type));
+    }
+
+    public SimplifiedScopedBindingBuilder bindJitProvider(TypeLiteral<? extends JitProvider<?>> typeLiteral) {
+      return bindJitProvider(Key.get(typeLiteral));
+    }
+
+    public SimplifiedScopedBindingBuilder bindJitProvider(Key<? extends JitProvider<?>> key) {
+      throw new UnsupportedOperationException();
+    }
+
+    public SimplifiedScopedBindingBuilder bindJitProvider(JitProvider<?> jitProvider) {
+      JitProviderInstanceBinding binding = new JitProviderInstanceBinding(getSource(), jitProvider);
+      elements.add(binding);
+      return new JitBindingBuilder(binding);
     }
 
     public void requestStaticInjection(Class<?>... types) {

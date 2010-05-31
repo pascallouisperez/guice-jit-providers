@@ -16,17 +16,19 @@
 
 package com.google.inject.internal;
 
-import com.google.inject.Binding;
-import com.google.inject.Key;
-import com.google.inject.Scope;
-import com.google.inject.TypeLiteral;
 import static com.google.inject.internal.Preconditions.checkNotNull;
-import com.google.inject.spi.TypeListenerBinding;
+
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import com.google.inject.Binding;
+import com.google.inject.Key;
+import com.google.inject.Scope;
+import com.google.inject.TypeLiteral;
+import com.google.inject.spi.TypeListenerBinding;
 
 /**
  * @author jessewilson@google.com (Jesse Wilson)
@@ -39,6 +41,7 @@ final class InheritingState implements State {
   private final Map<Key<?>, Binding<?>> explicitBindingsMutable = Maps.newLinkedHashMap();
   private final Map<Key<?>, Binding<?>> explicitBindings
       = Collections.unmodifiableMap(explicitBindingsMutable);
+  private final List<JitBindingImpl<?>> jitBindings = Lists.newArrayList();
   private final Map<Class<? extends Annotation>, Scope> scopes = Maps.newHashMap();
   private final List<MatcherAndConverter> converters = Lists.newArrayList();
   /*if[AOP]*/
@@ -69,6 +72,14 @@ final class InheritingState implements State {
 
   public void putBinding(Key<?> key, BindingImpl<?> binding) {
     explicitBindingsMutable.put(key, binding);
+  }
+
+  public List<JitBindingImpl<?>> getJitBindingsThisLevel() {
+    return jitBindings;
+  }
+
+  public void addJitBinding(JitBindingImpl<?> jitBinding) {
+    jitBindings.add(jitBinding);
   }
 
   public Scope getScope(Class<? extends Annotation> annotationType) {

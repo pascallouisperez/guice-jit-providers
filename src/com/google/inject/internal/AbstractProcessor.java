@@ -16,7 +16,11 @@
 
 package com.google.inject.internal;
 
+import java.util.Iterator;
+import java.util.List;
+
 import com.google.inject.Binding;
+import com.google.inject.JitBinding;
 import com.google.inject.spi.Element;
 import com.google.inject.spi.ElementVisitor;
 import com.google.inject.spi.InjectionRequest;
@@ -28,8 +32,6 @@ import com.google.inject.spi.ScopeBinding;
 import com.google.inject.spi.StaticInjectionRequest;
 import com.google.inject.spi.TypeConverterBinding;
 import com.google.inject.spi.TypeListenerBinding;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * Abstract base class for creating an injector from module elements.
@@ -101,6 +103,10 @@ abstract class AbstractProcessor implements ElementVisitor<Boolean> {
   }
 
   public <T> Boolean visit(Binding<T> binding) {
+    return false;
+  }
+
+  public <T> Boolean visit(JitBinding<T> binding) {
     return false;
   }
 

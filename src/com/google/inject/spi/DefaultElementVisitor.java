@@ -17,6 +17,7 @@
 package com.google.inject.spi;
 
 import com.google.inject.Binding;
+import com.google.inject.JitBinding;
 
 /**
  * No-op visitor for subclassing. All interface methods simply delegate to
@@ -42,6 +43,10 @@ public abstract class DefaultElementVisitor<V> implements ElementVisitor<V> {
   }
 
   public <T> V visit(Binding<T> binding) {
+    return visitOther(binding);
+  }
+
+  public <T> V visit(JitBinding<T> binding) {
     return visitOther(binding);
   }
 

@@ -16,22 +16,22 @@
 
 package com.google.inject.internal;
 
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import com.google.inject.Binding;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.MembersInjector;
 import com.google.inject.Module;
 import com.google.inject.Provider;
+import com.google.inject.Scope;
 import com.google.inject.Stage;
 import com.google.inject.TypeLiteral;
-import com.google.inject.Scope;
 import com.google.inject.spi.Dependency;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.lang.annotation.Annotation;
 
 /**
  * Builds a tree of injectors. This is a primary injector, plus child injectors needed for each
@@ -40,7 +40,7 @@ import java.lang.annotation.Annotation;
  *
  * <p>Injector construction happens in two phases.
  * <ol>
- *   <li>Static building. In this phase, we interpret commands, create bindings, and inspect 
+ *   <li>Static building. In this phase, we interpret commands, create bindings, and inspect
  *     dependencies. During this phase, we hold a lock to ensure consistency with parent injectors.
  *     No user code is executed in this phase.</li>
  *   <li>Dynamic injection. In this phase, we call user code. We inject members that requested
@@ -63,12 +63,12 @@ public final class InternalInjectorCreator {
 
   private final InjectorShell.Builder shellBuilder = new InjectorShell.Builder();
   private List<InjectorShell> shells;
-  
+
   public static class InjectorOptions {
     final Stage stage;
     final boolean jitDisabled;
     final boolean allowCircularProxy;
-    
+
     public InjectorOptions(Stage stage, boolean jitDisabled, boolean allowCircularProxy) {
       this.stage = stage;
       this.jitDisabled = jitDisabled;
@@ -80,11 +80,11 @@ public final class InternalInjectorCreator {
     injectionRequestProcessor = new InjectionRequestProcessor(errors, initializer);
     bindingProcesor = new BindingProcessor(errors, initializer);
   }
-  
+
   public InternalInjectorCreator injectorOptions(InjectorOptions options) {
     shellBuilder.setInjectorOptions(options);
     return this;
-  }  
+  }
 
   /**
    * Sets the parent of the injector to-be-constructed.As a side effect, this sets this injector's
@@ -247,7 +247,7 @@ public final class InternalInjectorCreator {
   /** {@link Injector} exposed to users in {@link Stage#TOOL}. */
   static class ToolStageInjector implements Injector {
     private final Injector delegateInjector;
-    
+
     ToolStageInjector(Injector delegateInjector) {
       this.delegateInjector = delegateInjector;
     }

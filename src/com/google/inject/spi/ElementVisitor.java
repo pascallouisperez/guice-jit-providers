@@ -17,13 +17,14 @@
 package com.google.inject.spi;
 
 import com.google.inject.Binding;
+import com.google.inject.JitBinding;
 
 /**
  * Visit elements.
  *
  * @param <V> any type to be returned by the visit method. Use {@link Void} with
  *     {@code return null} if no return type is needed.
- * 
+ *
  * @since 2.0
  */
 public interface ElementVisitor<V> {
@@ -33,6 +34,11 @@ public interface ElementVisitor<V> {
    * instances of the type.
    */
   <T> V visit(Binding<T> binding);
+
+  /**
+   * Visit a just-in-time provider binding.
+   */
+  <T> V visit(JitBinding<T> binding);
 
   /*if[AOP]*/
   /**

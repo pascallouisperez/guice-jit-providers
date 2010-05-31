@@ -16,15 +16,17 @@
 
 package com.google.inject;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+
 import com.google.inject.binder.AnnotatedBindingBuilder;
 import com.google.inject.binder.AnnotatedConstantBindingBuilder;
 import com.google.inject.binder.LinkedBindingBuilder;
+import com.google.inject.binder.SimplifiedScopedBindingBuilder;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.spi.Message;
 import com.google.inject.spi.TypeConverter;
 import com.google.inject.spi.TypeListener;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 
 /**
  * Collects configuration information (primarily <i>bindings</i>) which will be
@@ -88,7 +90,7 @@ import java.lang.reflect.Method;
  * for particular <i>values</i> of the {@code @Red} annotation (see below),
  * then this binding will serve as a "catch-all" for any values of {@code @Red}
  * that have no exact match in the bindings.
- * 
+ *
  * <pre>
  *     bind(ServiceImpl.class).in(Singleton.class);
  *     // or, alternatively
@@ -105,7 +107,7 @@ import java.lang.reflect.Method;
  *
  * <p><b>Note:</b> a scope specified in this way <i>overrides</i> any scope that
  * was specified with an annotation on the {@code ServiceImpl} class.
- * 
+ *
  * <p>Besides {@link Singleton}/{@link Scopes#SINGLETON}, there are
  * servlet-specific scopes available in
  * {@code com.google.inject.servlet.ServletScopes}, and your Modules can
@@ -371,6 +373,42 @@ public interface Binder {
    */
   void bindListener(Matcher<? super TypeLiteral<?>> typeMatcher,
       TypeListener listener);
+
+  /**
+   * Binds a just-in-time provider. The injector will use the given just-in-time
+   * provider to dynamically instantiate objects.
+   *
+   * @param type type of the just-in-time provider
+   * @since 3.0?
+   */
+  SimplifiedScopedBindingBuilder bindJitProvider(Class<? extends JitProvider<?>> type);
+
+  /**
+   * Binds a just-in-time provider. The injector will use the given just-in-time
+   * provider to dynamically instantiate objects.
+   *
+   * @param typeLiteral type literal of the just-in-time provider
+   * @since 3.0?
+   */
+  SimplifiedScopedBindingBuilder bindJitProvider(TypeLiteral<? extends JitProvider<?>> typeLiteral);
+
+  /**
+   * Binds a just-in-time provider. The injector will use the given just-in-time
+   * provider to dynamically instantiate objects.
+   *
+   * @param key key of the just-in-time provider
+   * @since 3.0?
+   */
+  SimplifiedScopedBindingBuilder bindJitProvider(Key<? extends JitProvider<?>> key);
+
+  /**
+   * Binds a just-in-time provider. The injector will use the given just-in-time
+   * provider to dynamically instantiate objects.
+   *
+   * @param jitProvider the just-in-time provider
+   * @since 3.0?
+   */
+  SimplifiedScopedBindingBuilder bindJitProvider(JitProvider<?> jitProvider);
 
   /**
    * Returns a binder that uses {@code source} as the reference location for
