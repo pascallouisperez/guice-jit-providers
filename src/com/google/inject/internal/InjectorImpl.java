@@ -553,7 +553,7 @@ final class InjectorImpl implements Injector, Lookups {
     ProvidedJustInTimeBy providedJustInTimeBy = rawType.getAnnotation(ProvidedJustInTimeBy.class);
     if (providedJustInTimeBy != null) {
       Annotations.checkForMisplacedScopeAnnotations(rawType, source, errors);
-      return createProvidedJustInTimeByBinding(key, scoping, providedJustInTimeBy, errors);
+      return createProvidedJustInTimeByBinding(key, providedJustInTimeBy, errors);
     }
 
 
@@ -682,7 +682,7 @@ final class InjectorImpl implements Injector, Lookups {
 
   /** Creates a binding for a type annotated with @ProvidedJustInTimeBy. */
   private <T> BindingImpl<T> createProvidedJustInTimeByBinding(Key<T> key,
-      Scoping scoping, ProvidedJustInTimeBy providedJustInTimeBy, Errors errors)
+      ProvidedJustInTimeBy providedJustInTimeBy, Errors errors)
       throws ErrorsException {
     Class<?> rawType = key.getTypeLiteral().getRawType();
     Class<? extends JitProvider<?>> jitProviderType = providedJustInTimeBy.value();
@@ -705,6 +705,10 @@ final class InjectorImpl implements Injector, Lookups {
       throw errors.jitAnnotatedTypeCannotBeProvidedByJitProvider().toException();
     }
 
+    Class<? extends Annotation> scopeAnnotation =
+        Annotations.findScopeAnnotation(errors, rawType);
+    Scoping scoping = scopeAnnotation == null ?
+        Scoping.UNSCOPED : Scoping.forAnnotation(scopeAnnotation);
     return createCustomJustInTimeBinding(
         key,
         jitProvider,
