@@ -197,6 +197,14 @@ public final class Errors implements Serializable {
     return addMessage("@ProvidedBy points to the same class it annotates.");
   }
 
+  public Errors recursiveJitProviderType() {
+    return addMessage("@ProvidedJustInTimeBy points to the same class it annotates.");
+  }
+
+  public Errors jitAnnotatedTypeCannotBeProvidedByJitProvider() {
+    return addMessage("@ProvidedJustInTimeBy points to a type it cannot provide.");
+  }
+
   public Errors missingRuntimeRetention(Object source) {
     return addMessage("Please annotate with @Retention(RUNTIME).%n"
         + " Bound at %s.", convert(source));

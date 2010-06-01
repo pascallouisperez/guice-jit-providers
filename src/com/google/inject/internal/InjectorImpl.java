@@ -38,6 +38,7 @@ import com.google.inject.Key;
 import com.google.inject.MembersInjector;
 import com.google.inject.Module;
 import com.google.inject.ProvidedBy;
+import com.google.inject.ProvidedJustInTimeBy;
 import com.google.inject.Provider;
 import com.google.inject.ProvisionException;
 import com.google.inject.Scope;
@@ -548,6 +549,13 @@ final class InjectorImpl implements Injector, Lookups {
       return createProvidedByBinding(key, scoping, providedBy, errors);
     }
 
+    // Handle @ProvidedJustInTimeBy.
+    ProvidedJustInTimeBy providedJustInTimeBy = rawType.getAnnotation(ProvidedJustInTimeBy.class);
+    if (providedJustInTimeBy != null) {
+      Annotations.checkForMisplacedScopeAnnotations(rawType, source, errors);
+      return createProvidedJustInTimeByBinding(key, scoping, providedJustInTimeBy, errors);
+    }
+
 
     return ConstructorBindingImpl.create(this, key, null, source, scoping, errors, jitBinding && options.jitDisabled);
   }
@@ -672,6 +680,39 @@ final class InjectorImpl implements Injector, Lookups {
         targetKey);
   }
 
+  /** Creates a binding for a type annotated with @ProvidedJustInTimeBy. */
+  private <T> BindingImpl<T> createProvidedJustInTimeByBinding(Key<T> key,
+      Scoping scoping, ProvidedJustInTimeBy providedJustInTimeBy, Errors errors)
+      throws ErrorsException {
+    Class<?> rawType = key.getTypeLiteral().getRawType();
+    Class<? extends JitProvider<?>> jitProviderType = providedJustInTimeBy.value();
+
+    // Make sure it's not the same type. TODO: Can we check for deeper cycles?
+    if (jitProviderType == rawType) {
+      throw errors.recursiveJitProviderType().toException();
+    }
+
+    // Assume the provider provides an appropriate type. We check before returning.
+    @SuppressWarnings("unchecked")
+    Key<JitProvider<T>> jitProviderKey = (Key<JitProvider<T>>) Key.get(jitProviderType);
+
+    Object source = rawType;
+    JitBindingImpl<T> jitBinding = new LinkedJitProviderBinding<T>(source, jitProviderKey);
+    JitProvider<T> jitProvider = jitBinding.getJitProvider(this, errors);
+
+    // Make sure the just-in-time provider can provide instances of this key.
+    if (!jitProvider.canProvide(key)) {
+      throw errors.jitAnnotatedTypeCannotBeProvidedByJitProvider().toException();
+    }
+
+    return createCustomJustInTimeBinding(
+        key,
+        jitProvider,
+        source,
+        errors,
+        scoping);
+  }
+
   /**
    * Attempts to create a just-in-time binding for {@code key} in the root injector, falling back to
    * other ancestor injectors until this injector is tried.
@@ -760,7 +801,7 @@ final class InjectorImpl implements Injector, Lookups {
     // Try to use a just-in-time provider
     if (!JitProvider.class.isAssignableFrom(key.getTypeLiteral().getRawType())) {
       /* Note: we cannot allow a just-in-time provider to be provided
-       * just-in-time. Since an instance of jit provider is required to
+       * just-in-time. Since an instance of a jit provider is required to
        * determine whether it could be provided or not, allowing jit providers
        * to be provided just-in-time would create an infinite loop.
        */
@@ -783,21 +824,6 @@ final class InjectorImpl implements Injector, Lookups {
   private <T> BindingImpl<T> createCustomJustInTimeBinding(
       final Key<T> key, final JitProvider<T> jitProvider,
       Object source, Errors errors, Scoping scoping) {
-    //  InjectorImpl injector, Key<T> key,
-    //  Object source, InternalFactory<? extends T> internalFactory, Scoping scoping,
-    //  Provider<? extends T> providerInstance,
-    //  Set<InjectionPoint> injectionPoints
-
-
-    //        Provider<? extends T> provider = binding.getProviderInstance();
-    //  Set<InjectionPoint> injectionPoints = binding.getInjectionPoints();
-    //  Initializable<Provider<? extends T>> initializable = initializer
-    //      .<Provider<? extends T>>requestInjection(injector, provider, source, injectionPoints);
-    //  InternalFactory<T> factory = new InternalFactoryToProviderAdapter<T>(initializable, source);
-    //  InternalFactory<? extends T> scopedFactory
-    //      = Scoping.scope(key, injector, factory, source, scoping);
-    //  putBinding(new ProviderInstanceBindingImpl<T>(injector, key, source, scopedFactory, scoping,
-    //      provider, injectionPoints));
     Provider<T> provider = new Provider<T>() {
       public T get() {
         return jitProvider.get(key);

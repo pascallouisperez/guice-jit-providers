@@ -51,6 +51,17 @@ public class JitProvidersTest extends TestCase {
     Injector injector = new InjectorBuilder().addModules(module).build();
     Key<Factory<String>> key = Key.get(new TypeLiteral<Factory<String>>() {});
 
+    check(injector, key);
+  }
+
+  public void testImplicitJitProviderBinding() {
+    Injector injector = new InjectorBuilder().build();
+    Key<AnnotatedFactory<String>> key = Key.get(new TypeLiteral<AnnotatedFactory<String>>() {});
+
+    check(injector, key);
+  }
+
+  private void check(Injector injector, Key<? extends Factory<String>> key) {
     Factory<String> instance1 = injector.getInstance(key);
     Factory<String> instance2 = injector.getInstance(key);
 
@@ -62,14 +73,6 @@ public class JitProvidersTest extends TestCase {
     assertTrue("scoping is incorrect", instance1 == instance2);
   }
 
-  public void testImplicitJitProviderBinding() {
-    Injector injector = new InjectorBuilder().build();
-
-    assertEquals(
-        String.class,
-        injector.getInstance(Key.get(new TypeLiteral<AnnotatedFactory<String>>() {})).klass);
-  }
-
   static class Factory<T> {
     protected final Class<T> klass;
     Factory(Class<T> klass) {
@@ -77,7 +80,7 @@ public class JitProvidersTest extends TestCase {
     }
   }
 
-//  @ProvidedJustInTimeBy(FactoryJitProvider.class)
+  @Singleton @ProvidedJustInTimeBy(FactoryJitProvider.class)
   static class AnnotatedFactory<T> extends Factory<T> {
     AnnotatedFactory(Class<T> klass) {
       super(klass);
@@ -86,7 +89,7 @@ public class JitProvidersTest extends TestCase {
 
   static class FactoryJitProvider implements JitProvider<Factory<?>> {
     public boolean canProvide(Key<?> key) {
-      return key.getTypeLiteral().getRawType().equals(Factory.class);
+      return Factory.class.isAssignableFrom(key.getTypeLiteral().getRawType());
     }
     @SuppressWarnings("unchecked")
     public Factory<?> get(Key<?> key) {
