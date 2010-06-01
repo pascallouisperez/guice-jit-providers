@@ -61,6 +61,12 @@ public class JitProvidersTest extends TestCase {
     check(injector, key);
   }
 
+  public void testImplicitJitProviderBindingInContainer() {
+    assertEquals(
+        String.class,
+        new InjectorBuilder().build().getInstance(Container.class).factory.klass);
+  }
+
   private void check(Injector injector, Key<? extends Factory<String>> key) {
     Factory<String> instance1 = injector.getInstance(key);
     Factory<String> instance2 = injector.getInstance(key);
@@ -84,6 +90,13 @@ public class JitProvidersTest extends TestCase {
   static class AnnotatedFactory<T> extends Factory<T> {
     AnnotatedFactory(Class<T> klass) {
       super(klass);
+    }
+  }
+
+  static class Container {
+    private final AnnotatedFactory<String> factory;
+    @Inject Container(AnnotatedFactory<String> factory) {
+      this.factory = factory;
     }
   }
 
