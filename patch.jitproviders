@@ -1,3 +1,2056 @@
+diff --git a/guice-snapshot-d11bd119d94b120d374d.jar b/guice-snapshot-d11bd119d94b120d374d.jar
+new file mode 100644
+index 0000000..2dd0a83
+Binary files /dev/null and b/guice-snapshot-d11bd119d94b120d374d.jar differ
+diff --git a/patch.jitproviders b/patch.jitproviders
+new file mode 100644
+index 0000000..09e2018
+--- /dev/null
++++ b/patch.jitproviders
+@@ -0,0 +1,2043 @@
++diff --git a/src/com/google/inject/AbstractModule.java b/src/com/google/inject/AbstractModule.java
++index 08d89b7..054118a 100644
++--- a/src/com/google/inject/AbstractModule.java
+++++ b/src/com/google/inject/AbstractModule.java
++@@ -16,17 +16,20 @@
++ 
++ package com.google.inject;
++ 
+++import static com.google.inject.internal.Preconditions.checkNotNull;
+++import static com.google.inject.internal.Preconditions.checkState;
+++
+++import java.lang.annotation.Annotation;
+++import java.lang.reflect.Method;
+++
++ import com.google.inject.binder.AnnotatedBindingBuilder;
++ import com.google.inject.binder.AnnotatedConstantBindingBuilder;
++ import com.google.inject.binder.LinkedBindingBuilder;
++-import static com.google.inject.internal.Preconditions.checkNotNull;
++-import static com.google.inject.internal.Preconditions.checkState;
+++import com.google.inject.binder.SimplifiedScopedBindingBuilder;
++ import com.google.inject.matcher.Matcher;
++ import com.google.inject.spi.Message;
++ import com.google.inject.spi.TypeConverter;
++ import com.google.inject.spi.TypeListener;
++-import java.lang.annotation.Annotation;
++-import java.lang.reflect.Method;
++ 
++ /**
++  * A support class for {@link Module}s which reduces repetition and results in
++@@ -126,7 +129,7 @@ public abstract class AbstractModule implements Module {
++   }
++ 
++   /**
++-   * @see Binder#addError(Throwable) 
+++   * @see Binder#addError(Throwable)
++    */
++   protected void addError(Throwable t) {
++     binder.addError(t);
++@@ -218,7 +221,7 @@ public abstract class AbstractModule implements Module {
++   }
++ 
++   /**
++-   * @see Binder#currentStage() 
+++   * @see Binder#currentStage()
++    * @since 2.0
++    */
++   protected Stage currentStage() {
++@@ -250,4 +253,37 @@ public abstract class AbstractModule implements Module {
++       TypeListener listener) {
++     binder.bindListener(typeMatcher, listener);
++   }
+++
+++  /**
+++   * @see Binder#bindJitProvider(java.lang.Class)
+++   * @since 3.0?
+++   */
+++  protected <T> SimplifiedScopedBindingBuilder bindJitProvider(Class<? extends JitProvider<T>> type) {
+++    return binder.bindJitProvider(type);
+++  }
+++
+++  /**
+++   * @see Binder#bindJitProvider(TypeLiteral)
+++   * @since 3.0?
+++   */
+++  protected <T> SimplifiedScopedBindingBuilder bindJitProvider(TypeLiteral<? extends JitProvider<T>> typeLiteral) {
+++    return binder.bindJitProvider(typeLiteral);
+++  }
+++
+++  /**
+++   * @see Binder#bindJitProvider(Key)
+++   * @since 3.0?
+++   */
+++  protected <T> SimplifiedScopedBindingBuilder bindJitProvider(Key<? extends JitProvider<T>> key) {
+++    return binder.bindJitProvider(key);
+++  }
+++
+++  /**
+++   * @return
+++   * @see Binder#bindJitProvider(com.google.inject.JitProvider)
+++   * @since 3.0?
+++   */
+++  protected <T> SimplifiedScopedBindingBuilder bindJitProvider(JitProvider<T> jitProvider) {
+++    return binder.bindJitProvider(jitProvider);
+++  }
++ }
++diff --git a/src/com/google/inject/Binder.java b/src/com/google/inject/Binder.java
++index c5416c4..b7b09ec 100644
++--- a/src/com/google/inject/Binder.java
+++++ b/src/com/google/inject/Binder.java
++@@ -16,15 +16,17 @@
++ 
++ package com.google.inject;
++ 
+++import java.lang.annotation.Annotation;
+++import java.lang.reflect.Method;
+++
++ import com.google.inject.binder.AnnotatedBindingBuilder;
++ import com.google.inject.binder.AnnotatedConstantBindingBuilder;
++ import com.google.inject.binder.LinkedBindingBuilder;
+++import com.google.inject.binder.SimplifiedScopedBindingBuilder;
++ import com.google.inject.matcher.Matcher;
++ import com.google.inject.spi.Message;
++ import com.google.inject.spi.TypeConverter;
++ import com.google.inject.spi.TypeListener;
++-import java.lang.annotation.Annotation;
++-import java.lang.reflect.Method;
++ 
++ /**
++  * Collects configuration information (primarily <i>bindings</i>) which will be
++@@ -88,7 +90,7 @@ import java.lang.reflect.Method;
++  * for particular <i>values</i> of the {@code @Red} annotation (see below),
++  * then this binding will serve as a "catch-all" for any values of {@code @Red}
++  * that have no exact match in the bindings.
++- * 
+++ *
++  * <pre>
++  *     bind(ServiceImpl.class).in(Singleton.class);
++  *     // or, alternatively
++@@ -105,7 +107,7 @@ import java.lang.reflect.Method;
++  *
++  * <p><b>Note:</b> a scope specified in this way <i>overrides</i> any scope that
++  * was specified with an annotation on the {@code ServiceImpl} class.
++- * 
+++ *
++  * <p>Besides {@link Singleton}/{@link Scopes#SINGLETON}, there are
++  * servlet-specific scopes available in
++  * {@code com.google.inject.servlet.ServletScopes}, and your Modules can
++@@ -373,6 +375,42 @@ public interface Binder {
++       TypeListener listener);
++ 
++   /**
+++   * Binds a just-in-time provider. The injector will use the given just-in-time
+++   * provider to dynamically instantiate objects.
+++   *
+++   * @param type type of the just-in-time provider
+++   * @since 3.0?
+++   */
+++  <T> SimplifiedScopedBindingBuilder bindJitProvider(Class<? extends JitProvider<T>> type);
+++
+++  /**
+++   * Binds a just-in-time provider. The injector will use the given just-in-time
+++   * provider to dynamically instantiate objects.
+++   *
+++   * @param typeLiteral type literal of the just-in-time provider
+++   * @since 3.0?
+++   */
+++  <T> SimplifiedScopedBindingBuilder bindJitProvider(TypeLiteral<? extends JitProvider<T>> typeLiteral);
+++
+++  /**
+++   * Binds a just-in-time provider. The injector will use the given just-in-time
+++   * provider to dynamically instantiate objects.
+++   *
+++   * @param key key of the just-in-time provider
+++   * @since 3.0?
+++   */
+++  <T> SimplifiedScopedBindingBuilder bindJitProvider(Key<? extends JitProvider<T>> key);
+++
+++  /**
+++   * Binds a just-in-time provider. The injector will use the given just-in-time
+++   * provider to dynamically instantiate objects.
+++   *
+++   * @param jitProvider the just-in-time provider
+++   * @since 3.0?
+++   */
+++  <T> SimplifiedScopedBindingBuilder bindJitProvider(JitProvider<T> jitProvider);
+++
+++  /**
++    * Returns a binder that uses {@code source} as the reference location for
++    * configuration errors. This is typically a {@link StackTraceElement}
++    * for {@code .java} source but it could any binding source, such as the
++diff --git a/src/com/google/inject/JitBinding.java b/src/com/google/inject/JitBinding.java
++new file mode 100644
++index 0000000..aa03643
++--- /dev/null
+++++ b/src/com/google/inject/JitBinding.java
++@@ -0,0 +1,37 @@
+++/**
+++ * Copyright (C) 2010 Google Inc.
+++ *
+++ * Licensed under the Apache License, Version 2.0 (the "License");
+++ * you may not use this file except in compliance with the License.
+++ * You may obtain a copy of the License at
+++ *
+++ * http://www.apache.org/licenses/LICENSE-2.0
+++ *
+++ * Unless required by applicable law or agreed to in writing, software
+++ * distributed under the License is distributed on an "AS IS" BASIS,
+++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+++ * See the License for the specific language governing permissions and
+++ * limitations under the License.
+++ */
+++
+++package com.google.inject;
+++
+++import com.google.inject.spi.BindingScopingVisitor;
+++import com.google.inject.spi.Element;
+++
+++/**
+++ * Just-in-time binding.
+++ *
+++ * @author pascal@kaching.com (Pascal-Louis Perez)
+++ * @since 3.0?
+++ */
+++public interface JitBinding<T> extends Element {
+++
+++  /**
+++   * Accepts a scoping visitor. Invokes the visitor method specific to this binding's scoping.
+++   *
+++   * @param visitor to call back on
+++   * @since 2.0
+++   */
+++  <V> V acceptScopingVisitor(BindingScopingVisitor<V> visitor);
+++}
++diff --git a/src/com/google/inject/JitProvider.java b/src/com/google/inject/JitProvider.java
++new file mode 100644
++index 0000000..5ea76da
++--- /dev/null
+++++ b/src/com/google/inject/JitProvider.java
++@@ -0,0 +1,43 @@
+++/**
+++ * Copyright (C) 2010 Google Inc.
+++ *
+++ * Licensed under the Apache License, Version 2.0 (the "License");
+++ * you may not use this file except in compliance with the License.
+++ * You may obtain a copy of the License at
+++ *
+++ * http://www.apache.org/licenses/LICENSE-2.0
+++ *
+++ * Unless required by applicable law or agreed to in writing, software
+++ * distributed under the License is distributed on an "AS IS" BASIS,
+++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+++ * See the License for the specific language governing permissions and
+++ * limitations under the License.
+++ */
+++
+++package com.google.inject;
+++
+++/**
+++ * An object capable of dynamically determining if it can provide an instance
+++ * for a specified {@link Key}, and, if possible, provides such instance.
+++ *
+++ * @author pascal@kaching.com (Pascal-Louis Perez)
+++ * @since 3.0?
+++ */
+++public interface JitProvider<T> {
+++
+++  /**
+++   * Returns whether an instance of the give {@code key} can be provided by
+++   * {@link #get}. If this method returns {@code true} then {@link #get} must
+++   * be capable of producing an instance for the {@code key}.
+++   */
+++  boolean canProvide(Key<?> key);
+++
+++  /**
+++   * Provides an instance of {@code T}. May not return {@code null}.
+++   *
+++   * @throws OutOfScopeException when an attempt is made to access a scoped object while the scope
+++   *     in question is not currently active
+++   */
+++  T get(Key<?> key);
+++
+++}
++diff --git a/src/com/google/inject/ProvidedJustInTimeBy.java b/src/com/google/inject/ProvidedJustInTimeBy.java
++new file mode 100644
++index 0000000..85404fe
++--- /dev/null
+++++ b/src/com/google/inject/ProvidedJustInTimeBy.java
++@@ -0,0 +1,39 @@
+++/**
+++ * Copyright (C) 2006 Google Inc.
+++ *
+++ * Licensed under the Apache License, Version 2.0 (the "License");
+++ * you may not use this file except in compliance with the License.
+++ * You may obtain a copy of the License at
+++ *
+++ * http://www.apache.org/licenses/LICENSE-2.0
+++ *
+++ * Unless required by applicable law or agreed to in writing, software
+++ * distributed under the License is distributed on an "AS IS" BASIS,
+++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+++ * See the License for the specific language governing permissions and
+++ * limitations under the License.
+++ */
+++
+++package com.google.inject;
+++
+++import static java.lang.annotation.ElementType.TYPE;
+++import static java.lang.annotation.RetentionPolicy.RUNTIME;
+++
+++import java.lang.annotation.Retention;
+++import java.lang.annotation.Target;
+++
+++/**
+++ * A pointer to the default just-in-time provider type for a type.
+++ *
+++ * @author pascal@kaching.com (Pascal-Louis Perez)
+++ * @since 3.0?
+++ */
+++@Retention(RUNTIME)
+++@Target(TYPE)
+++public @interface ProvidedJustInTimeBy {
+++
+++  /**
+++   * The implementation type.
+++   */
+++  Class<? extends JitProvider<?>> value();
+++}
++diff --git a/src/com/google/inject/binder/ScopedBindingBuilder.java b/src/com/google/inject/binder/ScopedBindingBuilder.java
++index a601139..1b072a1 100644
++--- a/src/com/google/inject/binder/ScopedBindingBuilder.java
+++++ b/src/com/google/inject/binder/ScopedBindingBuilder.java
++@@ -16,25 +16,13 @@
++ 
++ package com.google.inject.binder;
++ 
++-import com.google.inject.Scope;
++-import java.lang.annotation.Annotation;
++ 
++ /**
++  * See the EDSL examples at {@link com.google.inject.Binder}.
++  *
++  * @author crazybob@google.com (Bob Lee)
++  */
++-public interface ScopedBindingBuilder {
++-
++-  /**
++-   * See the EDSL examples at {@link com.google.inject.Binder}.
++-   */
++-  void in(Class<? extends Annotation> scopeAnnotation);
++-
++-  /**
++-   * See the EDSL examples at {@link com.google.inject.Binder}.
++-   */
++-  void in(Scope scope);
+++public interface ScopedBindingBuilder extends SimplifiedScopedBindingBuilder {
++ 
++   /**
++    * Instructs the {@link com.google.inject.Injector} to eagerly initialize this
++diff --git a/src/com/google/inject/binder/SimplifiedScopedBindingBuilder.java b/src/com/google/inject/binder/SimplifiedScopedBindingBuilder.java
++new file mode 100644
++index 0000000..72a1046
++--- /dev/null
+++++ b/src/com/google/inject/binder/SimplifiedScopedBindingBuilder.java
++@@ -0,0 +1,41 @@
+++/**
+++ * Copyright (C) 2006 Google Inc.
+++ *
+++ * Licensed under the Apache License, Version 2.0 (the "License");
+++ * you may not use this file except in compliance with the License.
+++ * You may obtain a copy of the License at
+++ *
+++ * http://www.apache.org/licenses/LICENSE-2.0
+++ *
+++ * Unless required by applicable law or agreed to in writing, software
+++ * distributed under the License is distributed on an "AS IS" BASIS,
+++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+++ * See the License for the specific language governing permissions and
+++ * limitations under the License.
+++ */
+++
+++package com.google.inject.binder;
+++
+++import java.lang.annotation.Annotation;
+++
+++import com.google.inject.Scope;
+++
+++/**
+++ * See the EDSL examples at {@link com.google.inject.Binder}.
+++ *
+++ * @author crazybob@google.com (Bob Lee)
+++ * @author pascal@kaching.com (Pascal-Louis Perez)
+++ * @since 3.0?
+++ */
+++public interface SimplifiedScopedBindingBuilder {
+++
+++  /**
+++   * See the EDSL examples at {@link com.google.inject.Binder}.
+++   */
+++  void in(Class<? extends Annotation> scopeAnnotation);
+++
+++  /**
+++   * See the EDSL examples at {@link com.google.inject.Binder}.
+++   */
+++  void in(Scope scope);
+++}
++diff --git a/src/com/google/inject/internal/AbstractProcessor.java b/src/com/google/inject/internal/AbstractProcessor.java
++index 05881f2..859a4c0 100644
++--- a/src/com/google/inject/internal/AbstractProcessor.java
+++++ b/src/com/google/inject/internal/AbstractProcessor.java
++@@ -16,7 +16,11 @@
++ 
++ package com.google.inject.internal;
++ 
+++import java.util.Iterator;
+++import java.util.List;
+++
++ import com.google.inject.Binding;
+++import com.google.inject.JitBinding;
++ import com.google.inject.spi.Element;
++ import com.google.inject.spi.ElementVisitor;
++ import com.google.inject.spi.InjectionRequest;
++@@ -28,8 +32,6 @@ import com.google.inject.spi.ScopeBinding;
++ import com.google.inject.spi.StaticInjectionRequest;
++ import com.google.inject.spi.TypeConverterBinding;
++ import com.google.inject.spi.TypeListenerBinding;
++-import java.util.Iterator;
++-import java.util.List;
++ 
++ /**
++  * Abstract base class for creating an injector from module elements.
++@@ -104,6 +106,10 @@ abstract class AbstractProcessor implements ElementVisitor<Boolean> {
++     return false;
++   }
++ 
+++  public <T> Boolean visit(JitBinding<T> binding) {
+++    return false;
+++  }
+++
++   public <T> Boolean visit(ProviderLookup<T> providerLookup) {
++     return false;
++   }
++diff --git a/src/com/google/inject/internal/Errors.java b/src/com/google/inject/internal/Errors.java
++index a75b22d..3ff1abd 100644
++--- a/src/com/google/inject/internal/Errors.java
+++++ b/src/com/google/inject/internal/Errors.java
++@@ -16,19 +16,6 @@
++ 
++ package com.google.inject.internal;
++ 
++-import com.google.inject.ConfigurationException;
++-import com.google.inject.CreationException;
++-import com.google.inject.Key;
++-import com.google.inject.MembersInjector;
++-import com.google.inject.Provider;
++-import com.google.inject.ProvisionException;
++-import com.google.inject.Scope;
++-import com.google.inject.TypeLiteral;
++-import com.google.inject.spi.Dependency;
++-import com.google.inject.spi.InjectionListener;
++-import com.google.inject.spi.InjectionPoint;
++-import com.google.inject.spi.Message;
++-import com.google.inject.spi.TypeListenerBinding;
++ import java.io.PrintWriter;
++ import java.io.Serializable;
++ import java.io.StringWriter;
++@@ -44,18 +31,37 @@ import java.util.Comparator;
++ import java.util.Formatter;
++ import java.util.List;
++ 
+++import com.google.inject.ConfigurationException;
+++import com.google.inject.CreationException;
+++import com.google.inject.Key;
+++import com.google.inject.MembersInjector;
+++import com.google.inject.Provider;
+++import com.google.inject.ProvisionException;
+++import com.google.inject.Scope;
+++import com.google.inject.TypeLiteral;
+++import com.google.inject.spi.Dependency;
+++import com.google.inject.spi.InjectionListener;
+++import com.google.inject.spi.InjectionPoint;
+++import com.google.inject.spi.Message;
+++import com.google.inject.spi.TypeListenerBinding;
+++
++ /**
++- * A collection of error messages. If this type is passed as a method parameter, the method is
++- * considered to have executed succesfully only if new errors were not added to this collection.
+++ * A collection of error messages. If this type is passed as a method parameter,
+++ * the method is considered to have executed succesfully only if new errors were
+++ * not added to this collection.
++  *
++- * <p>Errors can be chained to provide additional context. To add context, call {@link #withSource}
++- * to create a new Errors instance that contains additional context. All messages added to the
++- * returned instance will contain full context.
+++ * <p>
+++ * Errors can be chained to provide additional context. To add context, call
+++ * {@link #withSource} to create a new Errors instance that contains additional
+++ * context. All messages added to the returned instance will contain full
+++ * context.
++  *
++- * <p>To avoid messages with redundant context, {@link #withSource} should be added sparingly. A
++- * good rule of thumb is to assume a ethod's caller has already specified enough context to
++- * identify that method. When calling a method that's defined in a different context, call that
++- * method with an errors object that includes its context.
+++ * <p>
+++ * To avoid messages with redundant context, {@link #withSource} should be added
+++ * sparingly. A good rule of thumb is to assume a ethod's caller has already
+++ * specified enough context to identify that method. When calling a method
+++ * that's defined in a different context, call that method with an errors object
+++ * that includes its context.
++  *
++  * @author jessewilson@google.com (Jesse Wilson)
++  */
++@@ -100,64 +106,73 @@ public final class Errors implements Serializable {
++   }
++ 
++   /**
++-   * Returns an instance that uses {@code source} as a reference point for newly added errors.
+++   * Returns an instance that uses {@code source} as a reference point for newly
+++   * added errors.
++    */
++   public Errors withSource(Object source) {
++-    return source == SourceProvider.UNKNOWN_SOURCE
++-        ? this
++-        : new Errors(this, source);
+++    return source == SourceProvider.UNKNOWN_SOURCE ? this : new Errors(this,
+++        source);
++   }
++ 
++   /**
++    * We use a fairly generic error message here. The motivation is to share the
++    * same message for both bind time errors:
++-   * <pre><code>Guice.createInjector(new AbstractModule() {
+++   *
+++   * <pre>
+++   * <code>Guice.createInjector(new AbstractModule() {
++    *   public void configure() {
++    *     bind(Runnable.class);
++    *   }
++-   * }</code></pre>
+++   * }</code>
+++   * </pre>
+++   *
++    * ...and at provide-time errors:
++-   * <pre><code>Guice.createInjector().getInstance(Runnable.class);</code></pre>
+++   *
+++   * <pre>
+++   * <code>Guice.createInjector().getInstance(Runnable.class);</code>
+++   * </pre>
+++   *
++    * Otherwise we need to know who's calling when resolving a just-in-time
++    * binding, which makes things unnecessarily complex.
++    */
++   public Errors missingImplementation(Key key) {
++     return addMessage("No implementation for %s was bound.", key);
++   }
++-  
+++
++   public Errors jitDisabled(Key key) {
++-    return addMessage("Explicit bindings are required and %s is not explicitly bound.", key);
+++    return addMessage(
+++        "Explicit bindings are required and %s is not explicitly bound.", key);
++   }
++ 
++   public Errors converterReturnedNull(String stringValue, Object source,
++       TypeLiteral<?> type, MatcherAndConverter matchingConverter) {
++     return addMessage("Received null converting '%s' (bound at %s) to %s%n"
++-        + " using %s.",
++-        stringValue, convert(source), type, matchingConverter);
+++        + " using %s.", stringValue, convert(source), type, matchingConverter);
++   }
++ 
++-  public Errors conversionTypeError(String stringValue, Object source, TypeLiteral<?> type,
++-      MatcherAndConverter matchingConverter, Object converted) {
+++  public Errors conversionTypeError(String stringValue, Object source,
+++      TypeLiteral<?> type, MatcherAndConverter matchingConverter,
+++      Object converted) {
++     return addMessage("Type mismatch converting '%s' (bound at %s) to %s%n"
++-        + " using %s.%n"
++-        + " Converter returned %s.",
++-        stringValue, convert(source), type, matchingConverter, converted);
+++        + " using %s.%n" + " Converter returned %s.", stringValue,
+++        convert(source), type, matchingConverter, converted);
++   }
++ 
++   public Errors conversionError(String stringValue, Object source,
++-      TypeLiteral<?> type, MatcherAndConverter matchingConverter, RuntimeException cause) {
+++      TypeLiteral<?> type, MatcherAndConverter matchingConverter,
+++      RuntimeException cause) {
++     return errorInUserCode(cause, "Error converting '%s' (bound at %s) to %s%n"
++-        + " using %s.%n"
++-        + " Reason: %s",
++-        stringValue, convert(source), type, matchingConverter, cause);
+++        + " using %s.%n" + " Reason: %s", stringValue, convert(source), type,
+++        matchingConverter, cause);
++   }
++ 
++-  public Errors ambiguousTypeConversion(String stringValue, Object source, TypeLiteral<?> type,
++-      MatcherAndConverter a, MatcherAndConverter b) {
++-    return addMessage("Multiple converters can convert '%s' (bound at %s) to %s:%n"
++-        + " %s and%n"
++-        + " %s.%n"
++-        + " Please adjust your type converter configuration to avoid overlapping matches.",
+++  public Errors ambiguousTypeConversion(String stringValue, Object source,
+++      TypeLiteral<?> type, MatcherAndConverter a, MatcherAndConverter b) {
+++    return addMessage(
+++        "Multiple converters can convert '%s' (bound at %s) to %s:%n"
+++            + " %s and%n"
+++            + " %s.%n"
+++            + " Please adjust your type converter configuration to avoid overlapping matches.",
++         stringValue, convert(source), type, a, b);
++   }
++ 
++@@ -182,6 +197,14 @@ public final class Errors implements Serializable {
++     return addMessage("@ProvidedBy points to the same class it annotates.");
++   }
++ 
+++  public Errors recursiveJitProviderType() {
+++    return addMessage("@ProvidedJustInTimeBy points to the same class it annotates.");
+++  }
+++
+++  public Errors jitAnnotatedTypeCannotBeProvidedByJitProvider() {
+++    return addMessage("@ProvidedJustInTimeBy points to a type it cannot provide.");
+++  }
+++
++   public Errors missingRuntimeRetention(Object source) {
++     return addMessage("Please annotate with @Retention(RUNTIME).%n"
++         + " Bound at %s.", convert(source));
++@@ -197,7 +220,8 @@ public final class Errors implements Serializable {
++   }
++ 
++   public Errors cannotBindToGuiceType(String simpleName) {
++-    return addMessage("Binding to core guice framework type is not allowed: %s.", simpleName);
+++    return addMessage(
+++        "Binding to core guice framework type is not allowed: %s.", simpleName);
++   }
++ 
++   public Errors scopeNotFound(Class<? extends Annotation> scopeAnnotation) {
++@@ -206,37 +230,42 @@ public final class Errors implements Serializable {
++ 
++   public Errors scopeAnnotationOnAbstractType(
++       Class<? extends Annotation> scopeAnnotation, Class<?> type, Object source) {
++-    return addMessage("%s is annotated with %s, but scope annotations are not supported "
++-        + "for abstract types.%n Bound at %s.", type, scopeAnnotation, convert(source));
+++    return addMessage(
+++        "%s is annotated with %s, but scope annotations are not supported "
+++            + "for abstract types.%n Bound at %s.", type, scopeAnnotation,
+++        convert(source));
++   }
++ 
++-  public Errors misplacedBindingAnnotation(Member member, Annotation bindingAnnotation) {
++-    return addMessage("%s is annotated with %s, but binding annotations should be applied "
++-        + "to its parameters instead.", member, bindingAnnotation);
+++  public Errors misplacedBindingAnnotation(Member member,
+++      Annotation bindingAnnotation) {
+++    return addMessage(
+++        "%s is annotated with %s, but binding annotations should be applied "
+++            + "to its parameters instead.", member, bindingAnnotation);
++   }
++ 
++-  private static final String CONSTRUCTOR_RULES =
++-      "Classes must have either one (and only one) constructor "
++-          + "annotated with @Inject or a zero-argument constructor that is not private.";
+++  private static final String CONSTRUCTOR_RULES = "Classes must have either one (and only one) constructor "
+++      + "annotated with @Inject or a zero-argument constructor that is not private.";
++ 
++   public Errors missingConstructor(Class<?> implementation) {
++-    return addMessage("Could not find a suitable constructor in %s. " + CONSTRUCTOR_RULES,
++-        implementation);
+++    return addMessage("Could not find a suitable constructor in %s. "
+++        + CONSTRUCTOR_RULES, implementation);
++   }
++ 
++   public Errors tooManyConstructors(Class<?> implementation) {
++-    return addMessage("%s has more than one constructor annotated with @Inject. "
++-        + CONSTRUCTOR_RULES, implementation);
+++    return addMessage(
+++        "%s has more than one constructor annotated with @Inject. "
+++            + CONSTRUCTOR_RULES, implementation);
++   }
++ 
++-  public Errors constructorNotDefinedByType(Constructor<?> constructor, TypeLiteral<?> type) {
+++  public Errors constructorNotDefinedByType(Constructor<?> constructor,
+++      TypeLiteral<?> type) {
++     return addMessage("%s does not define %s", type, constructor);
++   }
++ 
++   public Errors duplicateScopes(Scope existing,
++       Class<? extends Annotation> annotationType, Scope scope) {
++-    return addMessage("Scope %s is already bound to %s. Cannot bind %s.", existing,
++-        annotationType, scope);
+++    return addMessage("Scope %s is already bound to %s. Cannot bind %s.",
+++        existing, annotationType, scope);
++   }
++ 
++   public Errors voidProviderMethod() {
++@@ -249,13 +278,15 @@ public final class Errors implements Serializable {
++ 
++   public Errors cannotInjectInnerClass(Class<?> type) {
++     return addMessage("Injecting into inner classes is not supported.  "
++-        + "Please use a 'static' class (top-level or nested) instead of %s.", type);
+++        + "Please use a 'static' class (top-level or nested) instead of %s.",
+++        type);
++   }
++ 
++   public Errors duplicateBindingAnnotations(Member member,
++       Class<? extends Annotation> a, Class<? extends Annotation> b) {
++-    return addMessage("%s has more than one annotation annotated with @BindingAnnotation: "
++-        + "%s and %s", member, a, b);
+++    return addMessage(
+++        "%s has more than one annotation annotated with @BindingAnnotation: "
+++            + "%s and %s", member, a, b);
++   }
++ 
++   public Errors cannotInjectFinalField(Field field) {
++@@ -271,12 +302,14 @@ public final class Errors implements Serializable {
++   }
++ 
++   public Errors cannotInjectMethodWithTypeParameters(Method method) {
++-    return addMessage("Injected method %s cannot declare type parameters of its own.", method);
+++    return addMessage(
+++        "Injected method %s cannot declare type parameters of its own.", method);
++   }
++ 
++-  public Errors duplicateScopeAnnotations(
++-      Class<? extends Annotation> a, Class<? extends Annotation> b) {
++-    return addMessage("More than one scope annotation was found: %s and %s.", a, b);
+++  public Errors duplicateScopeAnnotations(Class<? extends Annotation> a,
+++      Class<? extends Annotation> b) {
+++    return addMessage("More than one scope annotation was found: %s and %s.",
+++        a, b);
++   }
++ 
++   public Errors recursiveBinding() {
++@@ -284,11 +317,13 @@ public final class Errors implements Serializable {
++   }
++ 
++   public Errors bindingAlreadySet(Key<?> key, Object source) {
++-    return addMessage("A binding to %s was already configured at %s.", key, convert(source));
+++    return addMessage("A binding to %s was already configured at %s.", key,
+++        convert(source));
++   }
++ 
++   public Errors childBindingAlreadySet(Key<?> key) {
++-    return addMessage("A binding to %s already exists on a child injector.", key);
+++    return addMessage("A binding to %s already exists on a child injector.",
+++        key);
++   }
++ 
++   public Errors errorInjectingMethod(Throwable cause) {
++@@ -299,8 +334,8 @@ public final class Errors implements Serializable {
++       TypeLiteral<?> type, Throwable cause) {
++     return errorInUserCode(cause,
++         "Error notifying TypeListener %s (bound at %s) of %s.%n"
++-        + " Reason: %s",
++-        listener.getListener(), convert(listener.getSource()), type, cause);
+++            + " Reason: %s", listener.getListener(), convert(listener
+++            .getSource()), type, cause);
++   }
++ 
++   public Errors errorInjectingConstructor(Throwable cause) {
++@@ -308,27 +343,31 @@ public final class Errors implements Serializable {
++   }
++ 
++   public Errors errorInProvider(RuntimeException runtimeException) {
++-    return errorInUserCode(runtimeException, "Error in custom provider, %s", runtimeException);
+++    return errorInUserCode(runtimeException, "Error in custom provider, %s",
+++        runtimeException);
++   }
++ 
++-  public Errors errorInUserInjector(
++-      MembersInjector<?> listener, TypeLiteral<?> type, RuntimeException cause) {
+++  public Errors errorInUserInjector(MembersInjector<?> listener,
+++      TypeLiteral<?> type, RuntimeException cause) {
++     return errorInUserCode(cause, "Error injecting %s using %s.%n"
++         + " Reason: %s", type, listener, cause);
++   }
++ 
++-  public Errors errorNotifyingInjectionListener(
++-      InjectionListener<?> listener, TypeLiteral<?> type, RuntimeException cause) {
++-    return errorInUserCode(cause, "Error notifying InjectionListener %s of %s.%n"
++-        + " Reason: %s", listener, type, cause);
+++  public Errors errorNotifyingInjectionListener(InjectionListener<?> listener,
+++      TypeLiteral<?> type, RuntimeException cause) {
+++    return errorInUserCode(cause,
+++        "Error notifying InjectionListener %s of %s.%n" + " Reason: %s",
+++        listener, type, cause);
++   }
++ 
++   public Errors exposedButNotBound(Key<?> key) {
++-    return addMessage("Could not expose() %s, it must be explicitly bound.", key);
+++    return addMessage("Could not expose() %s, it must be explicitly bound.",
+++        key);
++   }
++-  
+++
++   public Errors keyNotFullySpecified(TypeLiteral<?> typeLiteral) {
++-    return addMessage("%s cannot be used as a key; It is not fully specified.", typeLiteral);
+++    return addMessage("%s cannot be used as a key; It is not fully specified.",
+++        typeLiteral);
++   }
++ 
++   public static Collection<Message> getMessagesFromThrowable(Throwable throwable) {
++@@ -343,7 +382,8 @@ public final class Errors implements Serializable {
++     }
++   }
++ 
++-  public Errors errorInUserCode(Throwable cause, String messageFormat, Object... arguments) {
+++  public Errors errorInUserCode(Throwable cause, String messageFormat,
+++      Object... arguments) {
++     Collection<Message> messages = getMessagesFromThrowable(cause);
++ 
++     if (!messages.isEmpty()) {
++@@ -374,7 +414,7 @@ public final class Errors implements Serializable {
++         "Tried proxying %s to support a circular dependency, but it is not an interface.",
++         expectedType);
++   }
++-  
+++
++   public Errors circularProxiesDisabled(Class<?> expectedType) {
++     return addMessage(
++         "Tried proxying %s to support a circular dependency, but circular proxies are disabled.",
++@@ -458,7 +498,8 @@ public final class Errors implements Serializable {
++     return addMessage(null, messageFormat, arguments);
++   }
++ 
++-  private Errors addMessage(Throwable cause, String messageFormat, Object... arguments) {
+++  private Errors addMessage(Throwable cause, String messageFormat,
+++      Object... arguments) {
++     String message = format(messageFormat, arguments);
++     addMessage(new Message(getSources(), message, cause));
++     return this;
++@@ -494,7 +535,9 @@ public final class Errors implements Serializable {
++     return result;
++   }
++ 
++-  /** Returns the formatted message for an exception with the specified messages. */
+++  /**
+++   * Returns the formatted message for an exception with the specified messages.
+++   */
++   public static String format(String heading, Collection<Message> errorMessages) {
++     Formatter fmt = new Formatter().format(heading).format(":%n%n");
++     int index = 1;
++@@ -529,8 +572,8 @@ public final class Errors implements Serializable {
++   }
++ 
++   /**
++-   * Returns {@code value} if it is non-null allowed to be null. Otherwise a message is added and
++-   * an {@code ErrorsException} is thrown.
+++   * Returns {@code value} if it is non-null allowed to be null. Otherwise a
+++   * message is added and an {@code ErrorsException} is thrown.
++    */
++   public <T> T checkForNull(T value, Object source, Dependency<?> dependency)
++       throws ErrorsException {
++@@ -539,9 +582,8 @@ public final class Errors implements Serializable {
++     }
++ 
++     int parameterIndex = dependency.getParameterIndex();
++-    String parameterName = (parameterIndex != -1)
++-        ? "parameter " + parameterIndex + " of "
++-        : "";
+++    String parameterName = (parameterIndex != -1) ? "parameter "
+++        + parameterIndex + " of " : "";
++     addMessage("null returned by binding at %s%n but %s%s is not @Nullable",
++         source, parameterName, dependency.getInjectionPoint().getMember());
++ 
++@@ -549,8 +591,9 @@ public final class Errors implements Serializable {
++   }
++ 
++   /**
++-   * Returns the cause throwable if there is exactly one cause in {@code messages}. If there are
++-   * zero or multiple messages with causes, null is returned.
+++   * Returns the cause throwable if there is exactly one cause in {@code
+++   * messages}. If there are zero or multiple messages with causes, null is
+++   * returned.
++    */
++   public static Throwable getOnlyCause(Collection<Message> messages) {
++     Throwable onlyCause = null;
++@@ -598,17 +641,17 @@ public final class Errors implements Serializable {
++         public String toString(Class c) {
++           return c.getName();
++         }
++-      },
++-      new Converter<Member>(Member.class) {
+++      }, new Converter<Member>(Member.class) {
++         public String toString(Member member) {
++           return MoreTypes.toString(member);
++         }
++-      },
++-      new Converter<Key>(Key.class) {
+++      }, new Converter<Key>(Key.class) {
++         public String toString(Key key) {
++           if (key.getAnnotationType() != null) {
++-            return key.getTypeLiteral() + " annotated with "
++-                + (key.getAnnotation() != null ? key.getAnnotation() : key.getAnnotationType());
+++            return key.getTypeLiteral()
+++                + " annotated with "
+++                + (key.getAnnotation() != null ? key.getAnnotation() : key
+++                    .getAnnotationType());
++           } else {
++             return key.getTypeLiteral().toString();
++           }
++@@ -638,10 +681,12 @@ public final class Errors implements Serializable {
++       formatInjectionPoint(formatter, null, (InjectionPoint) source);
++ 
++     } else if (source instanceof Class) {
++-      formatter.format("  at %s%n", StackTraceElements.forType((Class<?>) source));
+++      formatter.format("  at %s%n", StackTraceElements
+++          .forType((Class<?>) source));
++ 
++     } else if (source instanceof Member) {
++-      formatter.format("  at %s%n", StackTraceElements.forMember((Member) source));
+++      formatter.format("  at %s%n", StackTraceElements
+++          .forMember((Member) source));
++ 
++     } else if (source instanceof TypeLiteral) {
++       formatter.format("  while locating %s%n", source);
++@@ -655,20 +700,21 @@ public final class Errors implements Serializable {
++     }
++   }
++ 
++-  public static void formatInjectionPoint(Formatter formatter, Dependency<?> dependency,
++-      InjectionPoint injectionPoint) {
+++  public static void formatInjectionPoint(Formatter formatter,
+++      Dependency<?> dependency, InjectionPoint injectionPoint) {
++     Member member = injectionPoint.getMember();
++     Class<? extends Member> memberType = MoreTypes.memberType(member);
++ 
++     if (memberType == Field.class) {
++       dependency = injectionPoint.getDependencies().get(0);
++       formatter.format("  while locating %s%n", convert(dependency.getKey()));
++-      formatter.format("    for field at %s%n", StackTraceElements.forMember(member));
+++      formatter.format("    for field at %s%n", StackTraceElements
+++          .forMember(member));
++ 
++     } else if (dependency != null) {
++       formatter.format("  while locating %s%n", convert(dependency.getKey()));
++-      formatter.format("    for parameter %s at %s%n",
++-          dependency.getParameterIndex(), StackTraceElements.forMember(member));
+++      formatter.format("    for parameter %s at %s%n", dependency
+++          .getParameterIndex(), StackTraceElements.forMember(member));
++ 
++     } else {
++       formatSource(formatter, injectionPoint.getMember());
++diff --git a/src/com/google/inject/internal/InheritingState.java b/src/com/google/inject/internal/InheritingState.java
++index 8bca3e4..6d8c21a 100644
++--- a/src/com/google/inject/internal/InheritingState.java
+++++ b/src/com/google/inject/internal/InheritingState.java
++@@ -16,18 +16,20 @@
++ 
++ package com.google.inject.internal;
++ 
++-import com.google.inject.Binding;
++-import com.google.inject.Key;
++-import com.google.inject.Scope;
++-import com.google.inject.TypeLiteral;
++ import static com.google.inject.internal.Preconditions.checkNotNull;
++-import com.google.inject.spi.TypeListenerBinding;
+++
++ import java.lang.annotation.Annotation;
++ import java.util.ArrayList;
++ import java.util.Collections;
++ import java.util.List;
++ import java.util.Map;
++ 
+++import com.google.inject.Binding;
+++import com.google.inject.Key;
+++import com.google.inject.Scope;
+++import com.google.inject.TypeLiteral;
+++import com.google.inject.spi.TypeListenerBinding;
+++
++ /**
++  * @author jessewilson@google.com (Jesse Wilson)
++  */
++@@ -39,6 +41,7 @@ final class InheritingState implements State {
++   private final Map<Key<?>, Binding<?>> explicitBindingsMutable = Maps.newLinkedHashMap();
++   private final Map<Key<?>, Binding<?>> explicitBindings
++       = Collections.unmodifiableMap(explicitBindingsMutable);
+++  private final List<JitBindingImpl<?>> jitBindings = Lists.newArrayList();
++   private final Map<Class<? extends Annotation>, Scope> scopes = Maps.newHashMap();
++   private final List<MatcherAndConverter> converters = Lists.newArrayList();
++   /*if[AOP]*/
++@@ -71,6 +74,14 @@ final class InheritingState implements State {
++     explicitBindingsMutable.put(key, binding);
++   }
++ 
+++  public List<JitBindingImpl<?>> getJitBindingsThisLevel() {
+++    return jitBindings;
+++  }
+++
+++  public void addJitBinding(JitBindingImpl<?> jitBinding) {
+++    jitBindings.add(jitBinding);
+++  }
+++
++   public Scope getScope(Class<? extends Annotation> annotationType) {
++     Scope scope = scopes.get(annotationType);
++     return scope != null ? scope : parent.getScope(annotationType);
++diff --git a/src/com/google/inject/internal/InjectorImpl.java b/src/com/google/inject/internal/InjectorImpl.java
++index 520789a..6e03353 100644
++--- a/src/com/google/inject/internal/InjectorImpl.java
+++++ b/src/com/google/inject/internal/InjectorImpl.java
++@@ -16,16 +16,29 @@
++ 
++ package com.google.inject.internal;
++ 
+++import java.lang.annotation.Annotation;
+++import java.lang.reflect.GenericArrayType;
+++import java.lang.reflect.InvocationTargetException;
+++import java.lang.reflect.ParameterizedType;
+++import java.lang.reflect.Type;
+++import java.util.Collections;
+++import java.util.HashSet;
+++import java.util.List;
+++import java.util.Map;
+++import java.util.Set;
+++
++ import com.google.inject.Binder;
++ import com.google.inject.Binding;
++ import com.google.inject.ConfigurationException;
++ import com.google.inject.ImplementedBy;
++ import com.google.inject.Injector;
++ import com.google.inject.InjectorBuilder;
+++import com.google.inject.JitProvider;
++ import com.google.inject.Key;
++ import com.google.inject.MembersInjector;
++ import com.google.inject.Module;
++ import com.google.inject.ProvidedBy;
+++import com.google.inject.ProvidedJustInTimeBy;
++ import com.google.inject.Provider;
++ import com.google.inject.ProvisionException;
++ import com.google.inject.Scope;
++@@ -38,16 +51,6 @@ import com.google.inject.spi.HasDependencies;
++ import com.google.inject.spi.InjectionPoint;
++ import com.google.inject.spi.ProviderBinding;
++ import com.google.inject.util.Providers;
++-import java.lang.annotation.Annotation;
++-import java.lang.reflect.GenericArrayType;
++-import java.lang.reflect.InvocationTargetException;
++-import java.lang.reflect.ParameterizedType;
++-import java.lang.reflect.Type;
++-import java.util.Collections;
++-import java.util.HashSet;
++-import java.util.List;
++-import java.util.Map;
++-import java.util.Set;
++ 
++ /**
++  * Default {@link Injector} implementation.
++@@ -57,9 +60,9 @@ import java.util.Set;
++  */
++ final class InjectorImpl implements Injector, Lookups {
++   public static final TypeLiteral<String> STRING_TYPE = TypeLiteral.get(String.class);
++-  
+++
++   /** some limitations on what just in time bindings are allowed. */
++-  enum JitLimitation { 
+++  enum JitLimitation {
++     /** does not allow just in time bindings */
++     NO_JIT,
++     /** allows existing just in time bindings, but does not allow new ones */
++@@ -137,14 +140,14 @@ final class InjectorImpl implements Injector, Lookups {
++         }
++       }
++     }
++-    
+++
++     // If Key is a Provider, we have to see if the type it is providing exists,
++     // and, if so, we have to create the binding for the provider.
++     if(isProvider(key)) {
++       try {
++         // This is safe because isProvider above ensures that T is a Provider<?>
++         @SuppressWarnings("unchecked")
++-        Key<?> providedKey = (Key<?>)getProvidedKey((Key)key, new Errors());
+++        Key<?> providedKey = getProvidedKey((Key)key, new Errors());
++         if(getExistingBinding(providedKey) != null) {
++           return getBinding(key);
++         }
++@@ -206,7 +209,7 @@ final class InjectorImpl implements Injector, Lookups {
++     if(options.jitDisabled && jitType == JitLimitation.NO_JIT && !isProvider(key)) {
++       throw errors.jitDisabled(key).toException();
++     }
++-    
+++
++     synchronized (state.lock()) {
++       // first try to find a JIT binding that we've already created
++       for (InjectorImpl injector = this; injector != null; injector = injector.parent) {
++@@ -217,7 +220,7 @@ final class InjectorImpl implements Injector, Lookups {
++           return binding;
++         }
++       }
++-      
+++
++       if(options.jitDisabled && jitType != JitLimitation.NEW_OR_EXISTING_JIT && !isProvider(key)) {
++         throw errors.jitDisabled(key).toException();
++       } else {
++@@ -230,7 +233,7 @@ final class InjectorImpl implements Injector, Lookups {
++   private static boolean isProvider(Key<?> key) {
++     return key.getTypeLiteral().getRawType().equals(Provider.class);
++   }
++-  
+++
++   private static <T> Key<T> getProvidedKey(Key<Provider<T>> key, Errors errors) throws ErrorsException {
++     Type providerType = key.getTypeLiteral().getType();
++ 
++@@ -268,7 +271,7 @@ final class InjectorImpl implements Injector, Lookups {
++         Initializables.of(membersInjector));
++ 
++ 
++-    return new InstanceBindingImpl<MembersInjector<T>>(this, key, SourceProvider.UNKNOWN_SOURCE, 
+++    return new InstanceBindingImpl<MembersInjector<T>>(this, key, SourceProvider.UNKNOWN_SOURCE,
++         factory, ImmutableSet.<InjectionPoint>of(), membersInjector);
++   }
++ 
++@@ -454,7 +457,7 @@ final class InjectorImpl implements Injector, Lookups {
++       }
++     }
++   }
++-  
+++
++   /**
++    * Iterates through the binding's dependencies to clean up any stray bindings that were leftover
++    * from a failed JIT binding. This is required because the bindings are eagerly &
++@@ -491,7 +494,7 @@ final class InjectorImpl implements Injector, Lookups {
++     }
++     return bindingFailed;
++   }
++-  
+++
++   /** Cleans up any state that may have been cached when constructing the JIT binding. */
++   private void removeFailedJitBinding(Key<?> key, InjectionPoint ip) {
++     jitBindings.remove(key);
++@@ -500,7 +503,7 @@ final class InjectorImpl implements Injector, Lookups {
++       constructors.remove(ip);
++     }
++   }
++-  
+++
++   /** Safely gets the dependencies of possibly not initialized bindings. */
++   @SuppressWarnings("unchecked")
++   private Set<Dependency<?>> getInternalDependencies(BindingImpl<?> binding) {
++@@ -546,7 +549,14 @@ final class InjectorImpl implements Injector, Lookups {
++       return createProvidedByBinding(key, scoping, providedBy, errors);
++     }
++ 
++-    
+++    // Handle @ProvidedJustInTimeBy.
+++    ProvidedJustInTimeBy providedJustInTimeBy = rawType.getAnnotation(ProvidedJustInTimeBy.class);
+++    if (providedJustInTimeBy != null) {
+++      Annotations.checkForMisplacedScopeAnnotations(rawType, source, errors);
+++      return createProvidedJustInTimeByBinding(key, providedJustInTimeBy, errors);
+++    }
+++
+++
++     return ConstructorBindingImpl.create(this, key, null, source, scoping, errors, jitBinding && options.jitDisabled);
++   }
++ 
++@@ -670,6 +680,43 @@ final class InjectorImpl implements Injector, Lookups {
++         targetKey);
++   }
++ 
+++  /** Creates a binding for a type annotated with @ProvidedJustInTimeBy. */
+++  private <T> BindingImpl<T> createProvidedJustInTimeByBinding(Key<T> key,
+++      ProvidedJustInTimeBy providedJustInTimeBy, Errors errors)
+++      throws ErrorsException {
+++    Class<?> rawType = key.getTypeLiteral().getRawType();
+++    Class<? extends JitProvider<?>> jitProviderType = providedJustInTimeBy.value();
+++
+++    // Make sure it's not the same type. TODO: Can we check for deeper cycles?
+++    if (jitProviderType == rawType) {
+++      throw errors.recursiveJitProviderType().toException();
+++    }
+++
+++    // Assume the provider provides an appropriate type. We check before returning.
+++    @SuppressWarnings("unchecked")
+++    Key<JitProvider<T>> jitProviderKey = (Key<JitProvider<T>>) Key.get(jitProviderType);
+++
+++    Object source = rawType;
+++    JitBindingImpl<T> jitBinding = new LinkedJitProviderBinding<T>(source, jitProviderKey);
+++    JitProvider<T> jitProvider = jitBinding.getJitProvider(this, errors);
+++
+++    // Make sure the just-in-time provider can provide instances of this key.
+++    if (!jitProvider.canProvide(key)) {
+++      throw errors.jitAnnotatedTypeCannotBeProvidedByJitProvider().toException();
+++    }
+++
+++    Class<? extends Annotation> scopeAnnotation =
+++        Annotations.findScopeAnnotation(errors, rawType);
+++    Scoping scoping = scopeAnnotation == null ?
+++        Scoping.UNSCOPED : Scoping.forAnnotation(scopeAnnotation);
+++    return createCustomJustInTimeBinding(
+++        key,
+++        jitProvider,
+++        source,
+++        errors,
+++        scoping);
+++  }
+++
++   /**
++    * Attempts to create a just-in-time binding for {@code key} in the root injector, falling back to
++    * other ancestor injectors until this injector is tried.
++@@ -720,7 +767,7 @@ final class InjectorImpl implements Injector, Lookups {
++       // These casts are safe. We know T extends Provider<X> and that given Key<Provider<X>>,
++       // createProviderBinding() will return BindingImpl<Provider<X>>.
++       @SuppressWarnings("unchecked")
++-      BindingImpl<T> binding = (BindingImpl<T>) createProviderBinding((Key) key, errors);
+++      BindingImpl<T> binding = createProviderBinding((Key) key, errors);
++       return binding;
++     }
++ 
++@@ -729,7 +776,7 @@ final class InjectorImpl implements Injector, Lookups {
++       // These casts are safe. T extends MembersInjector<X> and that given Key<MembersInjector<X>>,
++       // createMembersInjectorBinding() will return BindingImpl<MembersInjector<X>>.
++       @SuppressWarnings("unchecked")
++-      BindingImpl<T> binding = (BindingImpl<T>) createMembersInjectorBinding((Key) key, errors);
+++      BindingImpl<T> binding = createMembersInjectorBinding((Key) key, errors);
++       return binding;
++     }
++ 
++@@ -754,12 +801,50 @@ final class InjectorImpl implements Injector, Lookups {
++     }
++ 
++     Object source = key.getTypeLiteral().getRawType();
+++
+++    // Try to use a just-in-time provider
+++    if (!JitProvider.class.isAssignableFrom(key.getTypeLiteral().getRawType())) {
+++      /* Note: we cannot allow a just-in-time provider to be provided
+++       * just-in-time. Since an instance of a jit provider is required to
+++       * determine whether it could be provided or not, allowing jit providers
+++       * to be provided just-in-time would create an infinite loop.
+++       */
+++      for (JitBindingImpl<?> jitBinding : state.getJitBindingsThisLevel()) {
+++        @SuppressWarnings("unchecked")
+++        JitProvider<T> jitProvider = (JitProvider<T>) jitBinding.getJitProvider(this, errors);
+++        if (jitProvider != null && jitProvider.canProvide(key)) {
+++          return createCustomJustInTimeBinding(key, jitProvider,
+++              source, errors, jitBinding.getScoping());
+++        }
+++      }
+++    }
+++
++     BindingImpl<T> binding = createUninitializedBinding(key, Scoping.UNSCOPED, source, errors, true);
++     errors.throwIfNewErrors(numErrorsBefore);
++     initializeJitBinding(binding, errors);
++     return binding;
++   }
++ 
+++  private <T> BindingImpl<T> createCustomJustInTimeBinding(
+++      final Key<T> key, final JitProvider<T> jitProvider,
+++      Object source, Errors errors, Scoping scoping) {
+++    Provider<T> provider = new Provider<T>() {
+++      public T get() {
+++        return jitProvider.get(key);
+++      }
+++    };
+++    Initializable<Provider<? extends T>> initializable = Initializables
+++        .<Provider<? extends T>>of(provider);
+++    InternalFactory<T> factory = new InternalFactoryToProviderAdapter<T>(initializable, source);
+++    Scoping injectableScoping =
+++        Scoping.makeInjectable(scoping, this, errors);
+++    InternalFactory<? extends T> scopedFactory =
+++        Scoping.scope(key, this, factory, source, injectableScoping);
+++    return new ProviderInstanceBindingImpl<T>(
+++        this, key, source, scopedFactory, injectableScoping, provider,
+++        InjectionPoint.forInstanceMethodsAndFields(key.getTypeLiteral()) /* ??? */);
+++  }
+++
++   <T> InternalFactory<? extends T> getInternalFactory(Key<T> key, Errors errors, JitLimitation jitType)
++       throws ErrorsException {
++     return getBindingOrThrow(key, errors, jitType).getInternalFactory();
++@@ -799,7 +884,7 @@ final class InjectorImpl implements Injector, Lookups {
++     <T> List<Binding<T>> getAll(TypeLiteral<T> type) {
++       List<Binding<?>> bindings = multimap.get(type);
++       return bindings != null
++-          ? Collections.<Binding<T>>unmodifiableList((List) multimap.get(type)) 
+++          ? Collections.<Binding<T>>unmodifiableList((List) multimap.get(type))
++           : ImmutableList.<Binding<T>>of();
++     }
++   }
++@@ -870,8 +955,8 @@ final class InjectorImpl implements Injector, Lookups {
++   }
++ 
++   <T> Provider<T> getProviderOrThrow(final Key<T> key, Errors errors) throws ErrorsException {
++-    
++-    
+++
+++
++     final InternalFactory<? extends T> factory = getInternalFactory(key, errors, JitLimitation.NO_JIT);
++     final Dependency<T> dependency = Dependency.get(key);
++ 
++diff --git a/src/com/google/inject/internal/InjectorShell.java b/src/com/google/inject/internal/InjectorShell.java
++index 172a170..6eea201 100644
++--- a/src/com/google/inject/internal/InjectorShell.java
+++++ b/src/com/google/inject/internal/InjectorShell.java
++@@ -16,17 +16,21 @@
++ 
++ package com.google.inject.internal;
++ 
+++import static com.google.inject.Scopes.SINGLETON;
+++import static com.google.inject.internal.Preconditions.checkNotNull;
+++import static com.google.inject.internal.Preconditions.checkState;
+++
+++import java.util.List;
+++import java.util.logging.Logger;
+++
++ import com.google.inject.Binder;
++ import com.google.inject.Injector;
+++import com.google.inject.InjectorBuilder;
++ import com.google.inject.Key;
++ import com.google.inject.Module;
++ import com.google.inject.Provider;
++-import static com.google.inject.Scopes.SINGLETON;
++ import com.google.inject.Singleton;
++ import com.google.inject.Stage;
++-import static com.google.inject.internal.Preconditions.checkNotNull;
++-import static com.google.inject.internal.Preconditions.checkState;
++-
++ import com.google.inject.internal.InternalInjectorCreator.InjectorOptions;
++ import com.google.inject.spi.Dependency;
++ import com.google.inject.spi.Element;
++@@ -34,8 +38,6 @@ import com.google.inject.spi.Elements;
++ import com.google.inject.spi.InjectionPoint;
++ import com.google.inject.spi.PrivateElements;
++ import com.google.inject.spi.TypeListenerBinding;
++-import java.util.List;
++-import java.util.logging.Logger;
++ 
++ /**
++  * A partially-initialized injector. See {@link InjectorBuilder}, which uses this to build a tree
++@@ -82,7 +84,7 @@ final class InjectorShell {
++       this.options = parent.options;
++       return this;
++     }
++-    
+++
++     Builder setInjectorOptions(InjectorOptions options) {
++       this.options = options;
++       return this;
++@@ -99,7 +101,7 @@ final class InjectorShell {
++         this.modules.add(module);
++       }
++     }
++-    
+++
++     InjectorOptions getInjectorOptions() {
++       return options;
++     }
++@@ -154,6 +156,9 @@ final class InjectorShell {
++       new TypeConverterBindingProcessor(errors).process(injector, elements);
++       stopwatch.resetAndLog("Converters creation");
++ 
+++      new JitProviderProcessor(errors).process(injector, elements);
+++      stopwatch.resetAndLog("JIT providers creation");
+++
++       bindInjector(injector);
++       bindLogger(injector);
++       bindingProcessor.process(injector, elements);
++diff --git a/src/com/google/inject/internal/InternalInjectorCreator.java b/src/com/google/inject/internal/InternalInjectorCreator.java
++index 3e491c0..3e8041e 100644
++--- a/src/com/google/inject/internal/InternalInjectorCreator.java
+++++ b/src/com/google/inject/internal/InternalInjectorCreator.java
++@@ -16,23 +16,23 @@
++ 
++ package com.google.inject.internal;
++ 
+++import java.lang.annotation.Annotation;
+++import java.util.Collection;
+++import java.util.List;
+++import java.util.Map;
+++import java.util.Set;
+++
++ import com.google.inject.Binding;
++ import com.google.inject.Injector;
++ import com.google.inject.Key;
++ import com.google.inject.MembersInjector;
++ import com.google.inject.Module;
++ import com.google.inject.Provider;
+++import com.google.inject.Scope;
++ import com.google.inject.Stage;
++ import com.google.inject.TypeLiteral;
++-import com.google.inject.Scope;
++ import com.google.inject.spi.Dependency;
++ 
++-import java.util.Collection;
++-import java.util.List;
++-import java.util.Map;
++-import java.util.Set;
++-import java.lang.annotation.Annotation;
++-
++ /**
++  * Builds a tree of injectors. This is a primary injector, plus child injectors needed for each
++  * {@code Binder.newPrivateBinder() private environment}. The primary injector is not necessarily a
++@@ -40,7 +40,7 @@ import java.lang.annotation.Annotation;
++  *
++  * <p>Injector construction happens in two phases.
++  * <ol>
++- *   <li>Static building. In this phase, we interpret commands, create bindings, and inspect 
+++ *   <li>Static building. In this phase, we interpret commands, create bindings, and inspect
++  *     dependencies. During this phase, we hold a lock to ensure consistency with parent injectors.
++  *     No user code is executed in this phase.</li>
++  *   <li>Dynamic injection. In this phase, we call user code. We inject members that requested
++@@ -63,12 +63,12 @@ public final class InternalInjectorCreator {
++ 
++   private final InjectorShell.Builder shellBuilder = new InjectorShell.Builder();
++   private List<InjectorShell> shells;
++-  
+++
++   public static class InjectorOptions {
++     final Stage stage;
++     final boolean jitDisabled;
++     final boolean allowCircularProxy;
++-    
+++
++     public InjectorOptions(Stage stage, boolean jitDisabled, boolean allowCircularProxy) {
++       this.stage = stage;
++       this.jitDisabled = jitDisabled;
++@@ -80,11 +80,11 @@ public final class InternalInjectorCreator {
++     injectionRequestProcessor = new InjectionRequestProcessor(errors, initializer);
++     bindingProcesor = new BindingProcessor(errors, initializer);
++   }
++-  
+++
++   public InternalInjectorCreator injectorOptions(InjectorOptions options) {
++     shellBuilder.setInjectorOptions(options);
++     return this;
++-  }  
+++  }
++ 
++   /**
++    * Sets the parent of the injector to-be-constructed.As a side effect, this sets this injector's
++@@ -247,7 +247,7 @@ public final class InternalInjectorCreator {
++   /** {@link Injector} exposed to users in {@link Stage#TOOL}. */
++   static class ToolStageInjector implements Injector {
++     private final Injector delegateInjector;
++-    
+++
++     ToolStageInjector(Injector delegateInjector) {
++       this.delegateInjector = delegateInjector;
++     }
++diff --git a/src/com/google/inject/internal/JitBindingBuilder.java b/src/com/google/inject/internal/JitBindingBuilder.java
++new file mode 100644
++index 0000000..3f0f37f
++--- /dev/null
+++++ b/src/com/google/inject/internal/JitBindingBuilder.java
++@@ -0,0 +1,46 @@
+++/**
+++ * Copyright (C) 2010 Google Inc.
+++ *
+++ * Licensed under the Apache License, Version 2.0 (the "License");
+++ * you may not use this file except in compliance with the License.
+++ * You may obtain a copy of the License at
+++ *
+++ * http://www.apache.org/licenses/LICENSE-2.0
+++ *
+++ * Unless required by applicable law or agreed to in writing, software
+++ * distributed under the License is distributed on an "AS IS" BASIS,
+++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+++ * See the License for the specific language governing permissions and
+++ * limitations under the License.
+++ */
+++
+++package com.google.inject.internal;
+++
+++import java.lang.annotation.Annotation;
+++
+++import com.google.inject.Scope;
+++import com.google.inject.binder.SimplifiedScopedBindingBuilder;
+++
+++/**
+++ * Bind a just-in-time provider.
+++ *
+++ * @author pascal@kaching.com (Pascal-Louis Perez)
+++ * @since 3.0?
+++ */
+++public class JitBindingBuilder implements SimplifiedScopedBindingBuilder {
+++
+++  private final JitBindingImpl<?> binding;
+++
+++  public JitBindingBuilder(JitBindingImpl<?> binding) {
+++    this.binding = binding;
+++  }
+++
+++  public void in(Class<? extends Annotation> scopeAnnotation) {
+++    binding.withScoping(Scoping.forAnnotation(scopeAnnotation));
+++  }
+++
+++  public void in(Scope scope) {
+++    binding.withScoping(Scoping.forInstance(scope));
+++  }
+++
+++}
++diff --git a/src/com/google/inject/internal/JitBindingImpl.java b/src/com/google/inject/internal/JitBindingImpl.java
++new file mode 100644
++index 0000000..2655d38
++--- /dev/null
+++++ b/src/com/google/inject/internal/JitBindingImpl.java
++@@ -0,0 +1,60 @@
+++/**
+++ * Copyright (C) 2010 Google Inc.
+++ *
+++ * Licensed under the Apache License, Version 2.0 (the "License");
+++ * you may not use this file except in compliance with the License.
+++ * You may obtain a copy of the License at
+++ *
+++ * http://www.apache.org/licenses/LICENSE-2.0
+++ *
+++ * Unless required by applicable law or agreed to in writing, software
+++ * distributed under the License is distributed on an "AS IS" BASIS,
+++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+++ * See the License for the specific language governing permissions and
+++ * limitations under the License.
+++ */
+++
+++package com.google.inject.internal;
+++
+++import static com.google.inject.internal.Preconditions.checkNotNull;
+++
+++import com.google.inject.JitBinding;
+++import com.google.inject.JitProvider;
+++import com.google.inject.spi.BindingScopingVisitor;
+++import com.google.inject.spi.ElementVisitor;
+++
+++/**
+++ * Default implementation of a just-in-time binding.
+++ *
+++ */
+++public abstract class JitBindingImpl<T> implements JitBinding<T> {
+++  private final Object source;
+++  private Scoping scoping;
+++
+++  protected JitBindingImpl(Object source) {
+++    this.source = checkNotNull(source, "source");
+++    this.scoping = Scoping.UNSCOPED;
+++  }
+++
+++  public abstract JitProvider<T> getJitProvider(InjectorImpl injector, Errors errors);
+++
+++  public void withScoping(Scoping scoping) {
+++    this.scoping = scoping;
+++  }
+++
+++  Scoping getScoping() {
+++    return scoping;
+++  }
+++
+++  public Object getSource() {
+++    return source;
+++  }
+++
+++  public <V> V acceptScopingVisitor(BindingScopingVisitor<V> visitor) {
+++    return scoping.acceptVisitor(visitor);
+++  }
+++
+++  public <V> V acceptVisitor(ElementVisitor<V> visitor) {
+++    return visitor.visit(this);
+++  }
+++}
++diff --git a/src/com/google/inject/internal/JitProviderInstanceBinding.java b/src/com/google/inject/internal/JitProviderInstanceBinding.java
++new file mode 100644
++index 0000000..0739891
++--- /dev/null
+++++ b/src/com/google/inject/internal/JitProviderInstanceBinding.java
++@@ -0,0 +1,46 @@
+++/**
+++ * Copyright (C) 2010 Google Inc.
+++ *
+++ * Licensed under the Apache License, Version 2.0 (the "License");
+++ * you may not use this file except in compliance with the License.
+++ * You may obtain a copy of the License at
+++ *
+++ * http://www.apache.org/licenses/LICENSE-2.0
+++ *
+++ * Unless required by applicable law or agreed to in writing, software
+++ * distributed under the License is distributed on an "AS IS" BASIS,
+++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+++ * See the License for the specific language governing permissions and
+++ * limitations under the License.
+++ */
+++
+++package com.google.inject.internal;
+++
+++import static com.google.inject.internal.Preconditions.checkNotNull;
+++
+++import com.google.inject.Binder;
+++import com.google.inject.JitProvider;
+++
+++/**
+++ * Just-in-time binding backed by an instance of a just-in-time provider.
+++ *
+++ * @author pascal@kaching.com (Pascal-Louis Perez)
+++ * @since 3.0?
+++ */
+++public final class JitProviderInstanceBinding<T> extends JitBindingImpl<T> {
+++  private final JitProvider<T> jitProvider;
+++
+++  public JitProviderInstanceBinding(
+++      Object source, JitProvider<T> jitProvider) {
+++    super(source);
+++    this.jitProvider = checkNotNull(jitProvider, "jit provider");
+++  }
+++
+++  public JitProvider<T> getJitProvider(InjectorImpl injector, Errors errors) {
+++    return jitProvider;
+++  }
+++
+++  public void applyTo(Binder binder) {
+++    binder.withSource(getSource()).bindJitProvider(jitProvider);
+++  }
+++}
++diff --git a/src/com/google/inject/internal/JitProviderProcessor.java b/src/com/google/inject/internal/JitProviderProcessor.java
++new file mode 100644
++index 0000000..daa396b
++--- /dev/null
+++++ b/src/com/google/inject/internal/JitProviderProcessor.java
++@@ -0,0 +1,40 @@
+++/**
+++ * Copyright (C) 2010 Google Inc.
+++ *
+++ * Licensed under the Apache License, Version 2.0 (the "License");
+++ * you may not use this file except in compliance with the License.
+++ * You may obtain a copy of the License at
+++ *
+++ * http://www.apache.org/licenses/LICENSE-2.0
+++ *
+++ * Unless required by applicable law or agreed to in writing, software
+++ * distributed under the License is distributed on an "AS IS" BASIS,
+++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+++ * See the License for the specific language governing permissions and
+++ * limitations under the License.
+++ */
+++
+++package com.google.inject.internal;
+++
+++import static java.lang.Boolean.TRUE;
+++
+++import com.google.inject.JitBinding;
+++
+++/**
+++ * Handles {@code Binder.bindJitProvider} commands.
+++ *
+++ * @author pascal@kaching.com (Pascal-Louis Perez)
+++ * @since 3.0?
+++ */
+++final class JitProviderProcessor extends AbstractProcessor {
+++
+++  JitProviderProcessor(Errors errors) {
+++    super(errors);
+++  }
+++
+++  public <T> Boolean visit(JitBinding<T> binding) {
+++    injector.state.addJitBinding((JitBindingImpl<?>) binding);
+++    return TRUE;
+++  }
+++
+++}
++diff --git a/src/com/google/inject/internal/LinkedJitProviderBinding.java b/src/com/google/inject/internal/LinkedJitProviderBinding.java
++new file mode 100644
++index 0000000..084b30f
++--- /dev/null
+++++ b/src/com/google/inject/internal/LinkedJitProviderBinding.java
++@@ -0,0 +1,53 @@
+++/**
+++ * Copyright (C) 2010 Google Inc.
+++ *
+++ * Licensed under the Apache License, Version 2.0 (the "License");
+++ * you may not use this file except in compliance with the License.
+++ * You may obtain a copy of the License at
+++ *
+++ * http://www.apache.org/licenses/LICENSE-2.0
+++ *
+++ * Unless required by applicable law or agreed to in writing, software
+++ * distributed under the License is distributed on an "AS IS" BASIS,
+++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+++ * See the License for the specific language governing permissions and
+++ * limitations under the License.
+++ */
+++
+++package com.google.inject.internal;
+++
+++import static com.google.inject.internal.Preconditions.checkNotNull;
+++
+++import com.google.inject.Binder;
+++import com.google.inject.JitProvider;
+++import com.google.inject.Key;
+++import com.google.inject.Provider;
+++
+++/**
+++ * Just-in-time binding backed by a key of a just-in-time provider.
+++ *
+++ * @author pascal@kaching.com (Pascal-Louis Perez)
+++ * @since 3.0?
+++ */
+++public final class LinkedJitProviderBinding<T> extends JitBindingImpl<T> {
+++  private final Key<? extends JitProvider<T>> jitProviderKey;
+++
+++  public LinkedJitProviderBinding(
+++      Object source, Key<? extends JitProvider<T>> jitProviderKey) {
+++    super(source);
+++    this.jitProviderKey = checkNotNull(jitProviderKey, "jit provider key");
+++  }
+++
+++  public JitProvider<T> getJitProvider(InjectorImpl injector, Errors errors) {
+++    try {
+++      Provider<? extends JitProvider<T>> provider = injector.getProviderOrThrow(jitProviderKey, errors);
+++      return provider == null ? null : provider.get();
+++    } catch (ErrorsException e) {
+++      return null;
+++    }
+++  }
+++
+++  public void applyTo(Binder binder) {
+++    binder.withSource(getSource()).bindJitProvider(jitProviderKey);
+++  }
+++}
++diff --git a/src/com/google/inject/internal/State.java b/src/com/google/inject/internal/State.java
++index 24699af..0a937a8 100644
++--- a/src/com/google/inject/internal/State.java
+++++ b/src/com/google/inject/internal/State.java
++@@ -16,14 +16,15 @@
++ 
++ package com.google.inject.internal;
++ 
+++import java.lang.annotation.Annotation;
+++import java.util.List;
+++import java.util.Map;
+++
++ import com.google.inject.Binding;
++ import com.google.inject.Key;
++ import com.google.inject.Scope;
++ import com.google.inject.TypeLiteral;
++ import com.google.inject.spi.TypeListenerBinding;
++-import java.lang.annotation.Annotation;
++-import java.util.List;
++-import java.util.Map;
++ 
++ /**
++  * The inheritable data within an injector. This class is intended to allow parent and local
++@@ -50,6 +51,14 @@ interface State {
++       throw new UnsupportedOperationException();
++     }
++ 
+++    public List<JitBindingImpl<?>> getJitBindingsThisLevel() {
+++      return ImmutableList.of();
+++    }
+++
+++    public void addJitBinding(JitBindingImpl<?> jitBinding) {
+++      throw new UnsupportedOperationException();
+++    }
+++
++     public Scope getScope(Class<? extends Annotation> scopingAnnotation) {
++       return null;
++     }
++@@ -115,6 +124,11 @@ interface State {
++ 
++   void putBinding(Key<?> key, BindingImpl<?> binding);
++ 
+++  /** Returns the just-in-time bindings at this level only. */
+++  List<JitBindingImpl<?>> getJitBindingsThisLevel();
+++
+++  void addJitBinding(JitBindingImpl<?> jitBinding);
+++
++   /** Returns the matching scope, or null. */
++   Scope getScope(Class<? extends Annotation> scopingAnnotation);
++ 
++diff --git a/src/com/google/inject/spi/DefaultElementVisitor.java b/src/com/google/inject/spi/DefaultElementVisitor.java
++index f6f8aa9..6aed46c 100644
++--- a/src/com/google/inject/spi/DefaultElementVisitor.java
+++++ b/src/com/google/inject/spi/DefaultElementVisitor.java
++@@ -17,6 +17,7 @@
++ package com.google.inject.spi;
++ 
++ import com.google.inject.Binding;
+++import com.google.inject.JitBinding;
++ 
++ /**
++  * No-op visitor for subclassing. All interface methods simply delegate to
++@@ -45,6 +46,10 @@ public abstract class DefaultElementVisitor<V> implements ElementVisitor<V> {
++     return visitOther(binding);
++   }
++ 
+++  public <T> V visit(JitBinding<T> binding) {
+++    return visitOther(binding);
+++  }
+++
++   /*if[AOP]*/
++   public V visit(InterceptorBinding interceptorBinding) {
++     return visitOther(interceptorBinding);
++diff --git a/src/com/google/inject/spi/ElementVisitor.java b/src/com/google/inject/spi/ElementVisitor.java
++index 20f901c..6a5c73b 100644
++--- a/src/com/google/inject/spi/ElementVisitor.java
+++++ b/src/com/google/inject/spi/ElementVisitor.java
++@@ -17,13 +17,14 @@
++ package com.google.inject.spi;
++ 
++ import com.google.inject.Binding;
+++import com.google.inject.JitBinding;
++ 
++ /**
++  * Visit elements.
++  *
++  * @param <V> any type to be returned by the visit method. Use {@link Void} with
++  *     {@code return null} if no return type is needed.
++- * 
+++ *
++  * @since 2.0
++  */
++ public interface ElementVisitor<V> {
++@@ -34,6 +35,11 @@ public interface ElementVisitor<V> {
++    */
++   <T> V visit(Binding<T> binding);
++ 
+++  /**
+++   * Visit a just-in-time provider binding.
+++   */
+++  <T> V visit(JitBinding<T> binding);
+++
++   /*if[AOP]*/
++   /**
++    * Visit a registration of interceptors for matching methods of matching classes.
++diff --git a/src/com/google/inject/spi/Elements.java b/src/com/google/inject/spi/Elements.java
++index 03871a7..edc8d13 100644
++--- a/src/com/google/inject/spi/Elements.java
+++++ b/src/com/google/inject/spi/Elements.java
++@@ -16,9 +16,20 @@
++ 
++ package com.google.inject.spi;
++ 
+++import static com.google.inject.internal.Preconditions.checkArgument;
+++
+++import java.lang.annotation.Annotation;
+++import java.lang.reflect.Method;
+++import java.util.Arrays;
+++import java.util.Collection;
+++import java.util.Collections;
+++import java.util.List;
+++import java.util.Set;
+++
++ import com.google.inject.AbstractModule;
++ import com.google.inject.Binder;
++ import com.google.inject.Binding;
+++import com.google.inject.JitProvider;
++ import com.google.inject.Key;
++ import com.google.inject.MembersInjector;
++ import com.google.inject.Module;
++@@ -31,26 +42,23 @@ import com.google.inject.TypeLiteral;
++ import com.google.inject.binder.AnnotatedBindingBuilder;
++ import com.google.inject.binder.AnnotatedConstantBindingBuilder;
++ import com.google.inject.binder.AnnotatedElementBuilder;
+++import com.google.inject.binder.SimplifiedScopedBindingBuilder;
++ import com.google.inject.internal.AbstractBindingBuilder;
++ import com.google.inject.internal.BindingBuilder;
++ import com.google.inject.internal.ConstantBindingBuilderImpl;
++ import com.google.inject.internal.Errors;
+++import com.google.inject.internal.ExposureBuilder;
++ import com.google.inject.internal.ImmutableList;
+++import com.google.inject.internal.JitBindingBuilder;
+++import com.google.inject.internal.JitBindingImpl;
+++import com.google.inject.internal.JitProviderInstanceBinding;
+++import com.google.inject.internal.LinkedJitProviderBinding;
++ import com.google.inject.internal.Lists;
++-import static com.google.inject.internal.Preconditions.checkArgument;
++ import com.google.inject.internal.PrivateElementsImpl;
++ import com.google.inject.internal.ProviderMethodsModule;
++ import com.google.inject.internal.Sets;
++ import com.google.inject.internal.SourceProvider;
++-import com.google.inject.internal.ExposureBuilder;
++ import com.google.inject.matcher.Matcher;
++-import java.lang.annotation.Annotation;
++-import java.lang.reflect.Method;
++-import java.util.Arrays;
++-import java.util.Collection;
++-import java.util.Collections;
++-import java.util.List;
++-import java.util.Set;
++ 
++ /**
++  * Exposes elements of a module so they can be inspected, validated or {@link
++@@ -206,6 +214,27 @@ public final class Elements {
++       elements.add(new TypeListenerBinding(getSource(), listener, typeMatcher));
++     }
++ 
+++    public <T> SimplifiedScopedBindingBuilder bindJitProvider(Class<? extends JitProvider<T>> type) {
+++      return bindJitProvider(Key.get(type));
+++    }
+++
+++    public <T> SimplifiedScopedBindingBuilder bindJitProvider(TypeLiteral<? extends JitProvider<T>> typeLiteral) {
+++      return bindJitProvider(Key.get(typeLiteral));
+++    }
+++
+++    public <T> SimplifiedScopedBindingBuilder bindJitProvider(Key<? extends JitProvider<T>> key) {
+++      return createJitBindingBuilder(new LinkedJitProviderBinding<T>(getSource(), key));
+++    }
+++
+++    public <T> SimplifiedScopedBindingBuilder bindJitProvider(JitProvider<T> jitProvider) {
+++      return createJitBindingBuilder(new JitProviderInstanceBinding<T>(getSource(), jitProvider));
+++    }
+++
+++    private JitBindingBuilder createJitBindingBuilder(JitBindingImpl<?> binding) {
+++      elements.add(binding);
+++      return new JitBindingBuilder(binding);
+++    }
+++
++     public void requestStaticInjection(Class<?>... types) {
++       for (Class<?> type : types) {
++         elements.add(new StaticInjectionRequest(getSource(), type));
++diff --git a/test/com/google/inject/AllTests.java b/test/com/google/inject/AllTests.java
++index 4142863..3bab06f 100644
++--- a/test/com/google/inject/AllTests.java
+++++ b/test/com/google/inject/AllTests.java
++@@ -16,6 +16,12 @@
++ 
++ package com.google.inject;
++ 
+++import java.util.Enumeration;
+++import java.util.Set;
+++
+++import junit.framework.Test;
+++import junit.framework.TestSuite;
+++
++ import com.google.inject.internal.FinalizableReferenceQueueTest;
++ import com.google.inject.internal.ImmutableSet;
++ import com.google.inject.internal.Jsr166HashMapTest;
++@@ -40,12 +46,8 @@ import com.google.inject.spi.ToolStageInjectorTest;
++ import com.google.inject.util.NoopOverrideTest;
++ import com.google.inject.util.ProvidersTest;
++ import com.google.inject.util.TypesTest;
++-import com.googlecode.guice.Jsr330Test;
++ import com.googlecode.guice.GuiceTck;
++-import java.util.Enumeration;
++-import java.util.Set;
++-import junit.framework.Test;
++-import junit.framework.TestSuite;
+++import com.googlecode.guice.Jsr330Test;
++ 
++ /**
++  * @author crazybob@google.com (Bob Lee)
++@@ -76,6 +78,7 @@ public class AllTests {
++     suite.addTestSuite(TypeListenerTest.class);
++     suite.addTestSuite(InjectorTest.class);
++     suite.addTestSuite(JitBindingsTest.class);
+++    suite.addTestSuite(JitProvidersTest.class);
++     // IntegrationTest is AOP-only
++     suite.addTestSuite(KeyTest.class);
++     suite.addTestSuite(LoggerInjectionTest.class);
++diff --git a/test/com/google/inject/JitProvidersTest.java b/test/com/google/inject/JitProvidersTest.java
++new file mode 100644
++index 0000000..fd3c348
++--- /dev/null
+++++ b/test/com/google/inject/JitProvidersTest.java
++@@ -0,0 +1,115 @@
+++package com.google.inject;
+++
+++import java.lang.reflect.ParameterizedType;
+++
+++import junit.framework.TestCase;
+++
+++/**
+++ * Tests for {@link JitProvider} support.
+++ *
+++ * @author pascal@kaching.com (Pascal-Louis Perez)
+++ */
+++public class JitProvidersTest extends TestCase {
+++
+++  public void testExplicitJitProviderBindingByClassScopingByAnnotation() {
+++    assertExplicitJitProviderBinding(new AbstractModule() {
+++      @Override
+++      protected void configure() {
+++        bindJitProvider(FactoryJitProvider.class).in(Singleton.class);
+++      }
+++    });
+++  }
+++
+++  public void testExplicitJitProviderBindingByClassScopingByInstance() {
+++    assertExplicitJitProviderBinding(new AbstractModule() {
+++      @Override
+++      protected void configure() {
+++        bindJitProvider(FactoryJitProvider.class).in(Scopes.SINGLETON);
+++      }
+++    });
+++  }
+++
+++  public void testExplicitJitProviderBindingByInstanceScopingByAnnotation() {
+++    assertExplicitJitProviderBinding(new AbstractModule() {
+++      @Override
+++      protected void configure() {
+++        bindJitProvider(new FactoryJitProvider()).in(Singleton.class);
+++      }
+++    });
+++  }
+++
+++  public void testExplicitJitProviderBindingByInstanceScopingByInstance() {
+++    assertExplicitJitProviderBinding(new AbstractModule() {
+++      @Override
+++      protected void configure() {
+++        bindJitProvider(new FactoryJitProvider()).in(Scopes.SINGLETON);
+++      }
+++    });
+++  }
+++
+++  private void assertExplicitJitProviderBinding(AbstractModule module) {
+++    Injector injector = new InjectorBuilder().addModules(module).build();
+++    Key<Factory<String>> key = Key.get(new TypeLiteral<Factory<String>>() {});
+++
+++    check(injector, key);
+++  }
+++
+++  public void testImplicitJitProviderBinding() {
+++    Injector injector = new InjectorBuilder().build();
+++    Key<AnnotatedFactory<String>> key = Key.get(new TypeLiteral<AnnotatedFactory<String>>() {});
+++
+++    check(injector, key);
+++  }
+++
+++  public void testImplicitJitProviderBindingInContainer() {
+++    assertEquals(
+++        String.class,
+++        new InjectorBuilder().build().getInstance(Container.class).factory.klass);
+++  }
+++
+++  private void check(Injector injector, Key<? extends Factory<String>> key) {
+++    Factory<String> instance1 = injector.getInstance(key);
+++    Factory<String> instance2 = injector.getInstance(key);
+++
+++    // correctness
+++    assertEquals(String.class, instance1.klass);
+++    assertEquals(String.class, instance2.klass);
+++
+++    // scoping
+++    assertTrue("scoping is incorrect", instance1 == instance2);
+++  }
+++
+++  static class Factory<T> {
+++    protected final Class<T> klass;
+++    Factory(Class<T> klass) {
+++      this.klass = klass;
+++    }
+++  }
+++
+++  @Singleton @ProvidedJustInTimeBy(FactoryJitProvider.class)
+++  static class AnnotatedFactory<T> extends Factory<T> {
+++    AnnotatedFactory(Class<T> klass) {
+++      super(klass);
+++    }
+++  }
+++
+++  static class Container {
+++    private final AnnotatedFactory<String> factory;
+++    @Inject Container(AnnotatedFactory<String> factory) {
+++      this.factory = factory;
+++    }
+++  }
+++
+++  static class FactoryJitProvider implements JitProvider<Factory<?>> {
+++    public boolean canProvide(Key<?> key) {
+++      return Factory.class.isAssignableFrom(key.getTypeLiteral().getRawType());
+++    }
+++    @SuppressWarnings("unchecked")
+++    public Factory<?> get(Key<?> key) {
+++      TypeLiteral<?> typeLiteral = key.getTypeLiteral();
+++      return new AnnotatedFactory(
+++          (Class) ((ParameterizedType) typeLiteral.getType()).getActualTypeArguments()[0]);
+++    }
+++  }
+++
+++}
 diff --git a/src/com/google/inject/AbstractModule.java b/src/com/google/inject/AbstractModule.java
 index 08d89b7..054118a 100644
 --- a/src/com/google/inject/AbstractModule.java
@@ -1881,6 +3934,23 @@ index 03871a7..edc8d13 100644
      public void requestStaticInjection(Class<?>... types) {
        for (Class<?> type : types) {
          elements.add(new StaticInjectionRequest(getSource(), type));
+diff --git a/src/com/google/inject/spi/InjectionPoint.java b/src/com/google/inject/spi/InjectionPoint.java
+index 17d0a21..75acab4 100644
+--- a/src/com/google/inject/spi/InjectionPoint.java
++++ b/src/com/google/inject/spi/InjectionPoint.java
+@@ -708,7 +708,11 @@ public final class InjectionPoint {
+     TypeLiteral<?> current = type;
+     while (current.getRawType() != Object.class) {
+       hierarchy.add(current);
+-      current = current.getSupertype(current.getRawType().getSuperclass());
++      Class<?> superclass = current.getRawType().getSuperclass();
++      if (superclass == null) {
++        return hierarchy;
++      }
++      current = current.getSupertype(superclass);
+     }
+     return hierarchy;
+   }
 diff --git a/test/com/google/inject/AllTests.java b/test/com/google/inject/AllTests.java
 index 4142863..3bab06f 100644
 --- a/test/com/google/inject/AllTests.java
@@ -1922,10 +3992,10 @@ index 4142863..3bab06f 100644
      suite.addTestSuite(LoggerInjectionTest.class);
 diff --git a/test/com/google/inject/JitProvidersTest.java b/test/com/google/inject/JitProvidersTest.java
 new file mode 100644
-index 0000000..fd3c348
+index 0000000..5c5b6b5
 --- /dev/null
 +++ b/test/com/google/inject/JitProvidersTest.java
-@@ -0,0 +1,115 @@
+@@ -0,0 +1,135 @@
 +package com.google.inject;
 +
 +import java.lang.reflect.ParameterizedType;
@@ -1995,22 +4065,41 @@ index 0000000..fd3c348
 +        new InjectorBuilder().build().getInstance(Container.class).factory.klass);
 +  }
 +
-+  private void check(Injector injector, Key<? extends Factory<String>> key) {
-+    Factory<String> instance1 = injector.getInstance(key);
-+    Factory<String> instance2 = injector.getInstance(key);
++  public void testJitProviderUsingKeyOfInterface() {
++    Injector injector = new InjectorBuilder().addModules(new AbstractModule() {
++      @Override
++      protected void configure() {
++        bindJitProvider(FactoryJitProvider.class).in(Singleton.class);
++      }
++    }).build();
++    Key<FactoryInterface<String>> key = Key.get(new TypeLiteral<FactoryInterface<String>>() {});
++
++    check(injector, key);
++  }
++
++  private void check(Injector injector, Key<? extends FactoryInterface<String>> key) {
++    FactoryInterface<String> instance1 = injector.getInstance(key);
++    FactoryInterface<String> instance2 = injector.getInstance(key);
 +
 +    // correctness
-+    assertEquals(String.class, instance1.klass);
-+    assertEquals(String.class, instance2.klass);
++    assertEquals(String.class, instance1.getKlass());
++    assertEquals(String.class, instance2.getKlass());
 +
 +    // scoping
 +    assertTrue("scoping is incorrect", instance1 == instance2);
 +  }
 +
-+  static class Factory<T> {
++  interface FactoryInterface<T> {
++    Class<T> getKlass();
++  }
++
++  static class Factory<T> implements FactoryInterface<T> {
 +    protected final Class<T> klass;
 +    Factory(Class<T> klass) {
 +      this.klass = klass;
++    }
++    public Class<T> getKlass() {
++      return klass;
 +    }
 +  }
 +
@@ -2030,13 +4119,14 @@ index 0000000..fd3c348
 +
 +  static class FactoryJitProvider implements JitProvider<Factory<?>> {
 +    public boolean canProvide(Key<?> key) {
-+      return Factory.class.isAssignableFrom(key.getTypeLiteral().getRawType());
++      return FactoryInterface.class.isAssignableFrom(key.getTypeLiteral().getRawType());
 +    }
 +    @SuppressWarnings("unchecked")
 +    public Factory<?> get(Key<?> key) {
 +      TypeLiteral<?> typeLiteral = key.getTypeLiteral();
-+      return new AnnotatedFactory(
-+          (Class) ((ParameterizedType) typeLiteral.getType()).getActualTypeArguments()[0]);
++      ParameterizedType parametrizedType = (ParameterizedType) typeLiteral.getType();
++      Class klass = (Class) parametrizedType.getActualTypeArguments()[0];
++      return new AnnotatedFactory(klass);
 +    }
 +  }
 +
