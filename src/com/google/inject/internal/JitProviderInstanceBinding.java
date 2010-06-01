@@ -22,7 +22,7 @@ import com.google.inject.Binder;
 import com.google.inject.JitProvider;
 
 /**
- * TODO(pascal): clean documentation.
+ * Just-in-time binding backed by an instance of a just-in-time provider.
  *
  * @author pascal@kaching.com (Pascal-Louis Perez)
  * @since 3.0?

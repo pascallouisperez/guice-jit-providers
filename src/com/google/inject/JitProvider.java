@@ -21,10 +21,15 @@ package com.google.inject;
  * for a specified {@link Key}, and, if possible, provides such instance.
  *
  * @author pascal@kaching.com (Pascal-Louis Perez)
+ * @since 3.0?
  */
 public interface JitProvider<T> {
 
-  // TODO(pascal): describe
+  /**
+   * Returns whether an instance of the give {@code key} can be provided by
+   * {@link #get}. If this method returns {@code true} then {@link #get} must
+   * be capable of producing an instance for the {@code key}.
+   */
   boolean canProvide(Key<?> key);
 
   /**

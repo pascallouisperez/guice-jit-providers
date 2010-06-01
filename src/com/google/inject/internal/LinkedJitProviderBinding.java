@@ -24,7 +24,7 @@ import com.google.inject.Key;
 import com.google.inject.Provider;
 
 /**
- * TODO(pascal): clean documentation.
+ * Just-in-time binding backed by a key of a just-in-time provider.
  *
  * @author pascal@kaching.com (Pascal-Louis Perez)
  * @since 3.0?

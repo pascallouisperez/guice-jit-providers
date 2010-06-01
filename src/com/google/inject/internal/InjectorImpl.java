@@ -809,7 +809,7 @@ final class InjectorImpl implements Injector, Lookups {
        * determine whether it could be provided or not, allowing jit providers
        * to be provided just-in-time would create an infinite loop.
        */
-      for (JitBindingImpl<?> jitBinding : state.getJitBindingsThisLevel()) { // TODO(pascal): should write a getAllJitBindings!!!
+      for (JitBindingImpl<?> jitBinding : state.getJitBindingsThisLevel()) {
         @SuppressWarnings("unchecked")
         JitProvider<T> jitProvider = (JitProvider<T>) jitBinding.getJitProvider(this, errors);
         if (jitProvider != null && jitProvider.canProvide(key)) {
