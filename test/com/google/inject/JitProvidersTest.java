@@ -124,7 +124,7 @@ public class JitProvidersTest extends TestCase {
       return FactoryInterface.class.isAssignableFrom(key.getTypeLiteral().getRawType());
     }
     @SuppressWarnings("unchecked")
-    public Factory<?> get(Key<?> key) {
+    public Factory<?> get(Key<Factory<?>> key) {
       TypeLiteral<?> typeLiteral = key.getTypeLiteral();
       ParameterizedType parametrizedType = (ParameterizedType) typeLiteral.getType();
       Class klass = (Class) parametrizedType.getActualTypeArguments()[0];

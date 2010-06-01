@@ -38,6 +38,6 @@ public interface JitProvider<T> {
    * @throws OutOfScopeException when an attempt is made to access a scoped object while the scope
    *     in question is not currently active
    */
-  T get(Key<?> key);
+  T get(Key<T> key);
 
 }
