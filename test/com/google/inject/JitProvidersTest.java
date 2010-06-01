@@ -67,22 +67,41 @@ public class JitProvidersTest extends TestCase {
         new InjectorBuilder().build().getInstance(Container.class).factory.klass);
   }
 
-  private void check(Injector injector, Key<? extends Factory<String>> key) {
-    Factory<String> instance1 = injector.getInstance(key);
-    Factory<String> instance2 = injector.getInstance(key);
+  public void testJitProviderUsingKeyOfInterface() {
+    Injector injector = new InjectorBuilder().addModules(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bindJitProvider(FactoryJitProvider.class).in(Singleton.class);
+      }
+    }).build();
+    Key<FactoryInterface<String>> key = Key.get(new TypeLiteral<FactoryInterface<String>>() {});
+
+    check(injector, key);
+  }
+
+  private void check(Injector injector, Key<? extends FactoryInterface<String>> key) {
+    FactoryInterface<String> instance1 = injector.getInstance(key);
+    FactoryInterface<String> instance2 = injector.getInstance(key);
 
     // correctness
-    assertEquals(String.class, instance1.klass);
-    assertEquals(String.class, instance2.klass);
+    assertEquals(String.class, instance1.getKlass());
+    assertEquals(String.class, instance2.getKlass());
 
     // scoping
     assertTrue("scoping is incorrect", instance1 == instance2);
   }
 
-  static class Factory<T> {
+  interface FactoryInterface<T> {
+    Class<T> getKlass();
+  }
+
+  static class Factory<T> implements FactoryInterface<T> {
     protected final Class<T> klass;
     Factory(Class<T> klass) {
       this.klass = klass;
+    }
+    public Class<T> getKlass() {
+      return klass;
     }
   }
 
@@ -102,13 +121,14 @@ public class JitProvidersTest extends TestCase {
 
   static class FactoryJitProvider implements JitProvider<Factory<?>> {
     public boolean canProvide(Key<?> key) {
-      return Factory.class.isAssignableFrom(key.getTypeLiteral().getRawType());
+      return FactoryInterface.class.isAssignableFrom(key.getTypeLiteral().getRawType());
     }
     @SuppressWarnings("unchecked")
     public Factory<?> get(Key<?> key) {
       TypeLiteral<?> typeLiteral = key.getTypeLiteral();
-      return new AnnotatedFactory(
-          (Class) ((ParameterizedType) typeLiteral.getType()).getActualTypeArguments()[0]);
+      ParameterizedType parametrizedType = (ParameterizedType) typeLiteral.getType();
+      Class klass = (Class) parametrizedType.getActualTypeArguments()[0];
+      return new AnnotatedFactory(klass);
     }
   }
 
