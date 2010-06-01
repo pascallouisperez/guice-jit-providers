@@ -26,6 +26,7 @@ import java.lang.annotation.Target;
  * A pointer to the default just-in-time provider type for a type.
  *
  * @author pascal@kaching.com (Pascal-Louis Perez)
+ * @since 3.0?
  */
 @Retention(RUNTIME)
 @Target(TYPE)

@@ -25,6 +25,7 @@ import com.google.inject.Scope;
  *
  * @author crazybob@google.com (Bob Lee)
  * @author pascal@kaching.com (Pascal-Louis Perez)
+ * @since 3.0?
  */
 public interface SimplifiedScopedBindingBuilder {
 

@@ -24,6 +24,7 @@ import com.google.inject.JitBinding;
  * Handles {@code Binder.bindJitProvider} commands.
  *
  * @author pascal@kaching.com (Pascal-Louis Perez)
+ * @since 3.0?
  */
 final class JitProviderProcessor extends AbstractProcessor {
 

@@ -25,6 +25,7 @@ import com.google.inject.binder.SimplifiedScopedBindingBuilder;
  * Bind a just-in-time provider.
  *
  * @author pascal@kaching.com (Pascal-Louis Perez)
+ * @since 3.0?
  */
 public class JitBindingBuilder implements SimplifiedScopedBindingBuilder {
 

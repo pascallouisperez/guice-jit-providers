@@ -23,6 +23,7 @@ import com.google.inject.spi.Element;
  * Just-in-time binding.
  *
  * @author pascal@kaching.com (Pascal-Louis Perez)
+ * @since 3.0?
  */
 public interface JitBinding<T> extends Element {
 
