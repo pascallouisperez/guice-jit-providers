@@ -842,7 +842,7 @@ final class InjectorImpl implements Injector, Lookups {
         Scoping.scope(key, this, factory, source, injectableScoping);
     return new ProviderInstanceBindingImpl<T>(
         this, key, source, scopedFactory, injectableScoping, provider,
-        InjectionPoint.forInstanceMethodsAndFields(key.getTypeLiteral()) /* ??? */);
+        ImmutableSet.<InjectionPoint>of());
   }
 
   <T> InternalFactory<? extends T> getInternalFactory(Key<T> key, Errors errors, JitLimitation jitType)

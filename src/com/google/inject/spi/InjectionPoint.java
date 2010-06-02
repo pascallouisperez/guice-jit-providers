@@ -708,11 +708,7 @@ public final class InjectionPoint {
     TypeLiteral<?> current = type;
     while (current.getRawType() != Object.class) {
       hierarchy.add(current);
-      Class<?> superclass = current.getRawType().getSuperclass();
-      if (superclass == null) {
-        return hierarchy;
-      }
-      current = current.getSupertype(superclass);
+      current = current.getSupertype(current.getRawType().getSuperclass());
     }
     return hierarchy;
   }

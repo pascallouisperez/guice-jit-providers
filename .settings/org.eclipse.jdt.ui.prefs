@@ -1,6 +1,6 @@
-#Sun May 30 12:46:59 PDT 2010
+#Tue Jun 01 20:49:03 PDT 2010
 eclipse.preferences.version=1
-editor_save_participant_org.eclipse.jdt.ui.postsavelistener.cleanup=true
+editor_save_participant_org.eclipse.jdt.ui.postsavelistener.cleanup=false
 formatter_profile=_KaChing
 formatter_settings_version=11
 org.eclipse.jdt.ui.javadoc=false
