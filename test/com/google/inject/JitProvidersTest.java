@@ -79,6 +79,15 @@ public class JitProvidersTest extends TestCase {
     check(injector, key);
   }
 
+  public void testJitProviderRequiringInjection() {
+    assertExplicitJitProviderBinding(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bindJitProvider(JitProviderRequiringInjection.class).in(Singleton.class);
+      }
+    });
+  }
+
   private void check(Injector injector, Key<? extends FactoryInterface<String>> key) {
     FactoryInterface<String> instance1 = injector.getInstance(key);
     FactoryInterface<String> instance2 = injector.getInstance(key);
@@ -129,6 +138,13 @@ public class JitProvidersTest extends TestCase {
       ParameterizedType parametrizedType = (ParameterizedType) typeLiteral.getType();
       Class klass = (Class) parametrizedType.getActualTypeArguments()[0];
       return new AnnotatedFactory(klass);
+    }
+  }
+  
+  static class JitProviderRequiringInjection extends FactoryJitProvider {
+    @Inject Injector injector;
+    public boolean canProvide(Key<?> key) {
+      return injector != null && super.canProvide(key);
     }
   }
 
