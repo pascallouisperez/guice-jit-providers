@@ -18,8 +18,11 @@ package com.google.inject.internal;
 
 import static com.google.inject.internal.Preconditions.checkNotNull;
 
+import java.lang.reflect.Type;
+
 import com.google.inject.JitBinding;
 import com.google.inject.JitProvider;
+import com.google.inject.Key;
 import com.google.inject.spi.BindingScopingVisitor;
 import com.google.inject.spi.ElementVisitor;
 
@@ -29,14 +32,21 @@ import com.google.inject.spi.ElementVisitor;
  */
 public abstract class JitBindingImpl<T> implements JitBinding<T> {
   private final Object source;
+  private final Type typeScheme;
   private Scoping scoping;
 
-  protected JitBindingImpl(Object source) {
+  protected JitBindingImpl(Object source, Type typeScheme) {
+    this.typeScheme = typeScheme;
     this.source = checkNotNull(source, "source");
     this.scoping = Scoping.UNSCOPED;
   }
+  
+  @Override
+  public boolean canProvide(Key<?> key) {
+    return MoreTypes.isInstance(typeScheme, key.getTypeLiteral().getType());
+  }
 
-  public abstract JitProvider<T> getJitProvider(InjectorImpl injector, Errors errors);
+  public abstract JitProvider<? extends T> getJitProvider(InjectorImpl injector, Errors errors);
 
   public void withScoping(Scoping scoping) {
     this.scoping = scoping;

@@ -24,7 +24,9 @@ import java.lang.reflect.Method;
 
 import com.google.inject.binder.AnnotatedBindingBuilder;
 import com.google.inject.binder.AnnotatedConstantBindingBuilder;
+import com.google.inject.binder.AnnotatedJitBindingBuilder;
 import com.google.inject.binder.LinkedBindingBuilder;
+import com.google.inject.binder.LinkedJitBindingBuilder;
 import com.google.inject.binder.SimplifiedScopedBindingBuilder;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.spi.Message;
@@ -255,35 +257,18 @@ public abstract class AbstractModule implements Module {
   }
 
   /**
-   * @see Binder#bindJitProvider(java.lang.Class)
+   * @see Binder#bindJit(TypeLiteral)
    * @since 3.0?
    */
-  protected <T> SimplifiedScopedBindingBuilder bindJitProvider(Class<? extends JitProvider<T>> type) {
-    return binder.bindJitProvider(type);
+  protected <T> AnnotatedJitBindingBuilder<T> bindJit(TypeLiteral<T> typeLiteral) {
+    return binder.bindJit(typeLiteral);
   }
 
   /**
-   * @see Binder#bindJitProvider(TypeLiteral)
+   * @see Binder#bindJit(Key)
    * @since 3.0?
    */
-  protected <T> SimplifiedScopedBindingBuilder bindJitProvider(TypeLiteral<? extends JitProvider<T>> typeLiteral) {
-    return binder.bindJitProvider(typeLiteral);
-  }
-
-  /**
-   * @see Binder#bindJitProvider(Key)
-   * @since 3.0?
-   */
-  protected <T> SimplifiedScopedBindingBuilder bindJitProvider(Key<? extends JitProvider<T>> key) {
-    return binder.bindJitProvider(key);
-  }
-
-  /**
-   * @return
-   * @see Binder#bindJitProvider(com.google.inject.JitProvider)
-   * @since 3.0?
-   */
-  protected <T> SimplifiedScopedBindingBuilder bindJitProvider(JitProvider<T> jitProvider) {
-    return binder.bindJitProvider(jitProvider);
+  protected <T> LinkedJitBindingBuilder<T> bindJit(Key<T> key) {
+    return binder.bindJit(key);
   }
 }

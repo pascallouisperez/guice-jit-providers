@@ -44,6 +44,7 @@ import java.util.NoSuchElementException;
  * public {@code Types} API.
  *
  * @author jessewilson@google.com (Jesse Wilson)
+ * @author pascal@kaching.com (Pascal-Louis Perez)
  */
 public class MoreTypes {
 

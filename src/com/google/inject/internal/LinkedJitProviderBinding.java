@@ -18,6 +18,8 @@ package com.google.inject.internal;
 
 import static com.google.inject.internal.Preconditions.checkNotNull;
 
+import java.lang.reflect.Type;
+
 import com.google.inject.Binder;
 import com.google.inject.JitProvider;
 import com.google.inject.Key;
@@ -30,17 +32,17 @@ import com.google.inject.Provider;
  * @since 3.0?
  */
 public final class LinkedJitProviderBinding<T> extends JitBindingImpl<T> {
-  private final Key<? extends JitProvider<T>> jitProviderKey;
+  private final Key<? extends JitProvider<? extends T>> jitProviderKey;
 
   public LinkedJitProviderBinding(
-      Object source, Key<? extends JitProvider<T>> jitProviderKey) {
-    super(source);
+      Object source, Key<?> key, Key<? extends JitProvider<? extends T>> jitProviderKey) {
+    super(source, key.getTypeLiteral().getType());
     this.jitProviderKey = checkNotNull(jitProviderKey, "jit provider key");
   }
 
-  public JitProvider<T> getJitProvider(InjectorImpl injector, Errors errors) {
+  public JitProvider<? extends T> getJitProvider(InjectorImpl injector, Errors errors) {
     try {
-      Provider<? extends JitProvider<T>> provider = injector.getProviderOrThrow(jitProviderKey, errors);
+      Provider<? extends JitProvider<? extends T>> provider = injector.getProviderOrThrow(jitProviderKey, errors);
       return provider == null ? null : provider.get();
     } catch (ErrorsException e) {
       return null;
@@ -48,6 +50,6 @@ public final class LinkedJitProviderBinding<T> extends JitBindingImpl<T> {
   }
 
   public void applyTo(Binder binder) {
-    binder.withSource(getSource()).bindJitProvider(jitProviderKey);
+    getScoping().applyTo(binder.withSource(getSource()).bindJit(jitProviderKey));
   }
 }

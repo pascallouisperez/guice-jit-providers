@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Google Inc.
+ * Copyright (C) 2006 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,25 @@
  * limitations under the License.
  */
 
-package com.google.inject;
+package com.google.inject.binder;
+
+import java.lang.annotation.Annotation;
 
 /**
- * An object capable of dynamically providing an instance for a specified {@link Key}.
+ * See the EDSL examples at {@link com.google.inject.Binder}.
  *
  * @author pascal@kaching.com (Pascal-Louis Perez)
- * @since 3.0?
  */
-public interface JitProvider<T> {
+public interface AnnotatedJitBindingBuilder<T> extends LinkedJitBindingBuilder<T> {
 
   /**
-   * Provides an instance of {@code T}. May not return {@code null}.
-   *
-   * @throws OutOfScopeException when an attempt is made to access a scoped object while the scope
-   *     in question is not currently active
+   * See the EDSL examples at {@link com.google.inject.Binder}.
    */
-  T get(Key<T> key);
+  LinkedJitBindingBuilder<T> annotatedWith(
+      Class<? extends Annotation> annotationType);
 
+  /**
+   * See the EDSL examples at {@link com.google.inject.Binder}.
+   */
+  LinkedJitBindingBuilder<T> annotatedWith(Annotation annotation);
 }

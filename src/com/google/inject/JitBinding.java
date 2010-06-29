@@ -28,6 +28,12 @@ import com.google.inject.spi.Element;
 public interface JitBinding<T> extends Element {
 
   /**
+   * Returns {@code true} if this just-in-time binding can provide an instance
+   * for the specified {@code key}.
+   */
+  boolean canProvide(Key<?> key);
+  
+  /**
    * Accepts a scoping visitor. Invokes the visitor method specific to this binding's scoping.
    *
    * @param visitor to call back on

@@ -697,11 +697,11 @@ final class InjectorImpl implements Injector, Lookups {
     Key<JitProvider<T>> jitProviderKey = (Key<JitProvider<T>>) Key.get(jitProviderType);
 
     Object source = rawType;
-    JitBindingImpl<T> jitBinding = new LinkedJitProviderBinding<T>(source, jitProviderKey);
-    JitProvider<T> jitProvider = jitBinding.getJitProvider(this, errors);
+    JitBindingImpl<T> jitBinding = new LinkedJitProviderBinding<T>(source, key, jitProviderKey);
+    JitProvider<? extends T> jitProvider = jitBinding.getJitProvider(this, errors);
 
     // Make sure the just-in-time provider can provide instances of this key.
-    if (!jitProvider.canProvide(key)) {
+    if (!jitBinding.canProvide(key)) {
       throw errors.jitAnnotatedTypeCannotBeProvidedByJitProvider().toException();
     }
 
@@ -810,9 +810,9 @@ final class InjectorImpl implements Injector, Lookups {
        * to be provided just-in-time would create an infinite loop.
        */
       for (JitBindingImpl<?> jitBinding : state.getJitBindingsThisLevel()) {
-        @SuppressWarnings("unchecked")
-        JitProvider<T> jitProvider = (JitProvider<T>) jitBinding.getJitProvider(this, errors);
-        if (jitProvider != null && jitProvider.canProvide(key)) {
+        if (jitBinding.canProvide(key)) {
+          @SuppressWarnings("unchecked")
+          JitProvider<T> jitProvider = (JitProvider<T>) jitBinding.getJitProvider(this, errors);
           return createCustomJustInTimeBinding(key, jitProvider,
               source, errors, jitBinding.getScoping());
         }
@@ -826,11 +826,12 @@ final class InjectorImpl implements Injector, Lookups {
   }
 
   private <T> BindingImpl<T> createCustomJustInTimeBinding(
-      final Key<T> key, final JitProvider<T> jitProvider,
+      final Key<T> key, final JitProvider<? extends T> jitProvider,
       Object source, Errors errors, Scoping scoping) {
     Provider<T> provider = new Provider<T>() {
+      @SuppressWarnings("unchecked")
       public T get() {
-        return jitProvider.get(key);
+        return jitProvider.get((Key) key);
       }
     };
     Initializable<Provider<? extends T>> initializable = Initializables

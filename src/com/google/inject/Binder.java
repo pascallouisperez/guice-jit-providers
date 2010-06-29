@@ -21,7 +21,9 @@ import java.lang.reflect.Method;
 
 import com.google.inject.binder.AnnotatedBindingBuilder;
 import com.google.inject.binder.AnnotatedConstantBindingBuilder;
+import com.google.inject.binder.AnnotatedJitBindingBuilder;
 import com.google.inject.binder.LinkedBindingBuilder;
+import com.google.inject.binder.LinkedJitBindingBuilder;
 import com.google.inject.binder.SimplifiedScopedBindingBuilder;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.spi.Message;
@@ -378,19 +380,10 @@ public interface Binder {
    * Binds a just-in-time provider. The injector will use the given just-in-time
    * provider to dynamically instantiate objects.
    *
-   * @param type type of the just-in-time provider
-   * @since 3.0?
-   */
-  <T> SimplifiedScopedBindingBuilder bindJitProvider(Class<? extends JitProvider<T>> type);
-
-  /**
-   * Binds a just-in-time provider. The injector will use the given just-in-time
-   * provider to dynamically instantiate objects.
-   *
    * @param typeLiteral type literal of the just-in-time provider
    * @since 3.0?
    */
-  <T> SimplifiedScopedBindingBuilder bindJitProvider(TypeLiteral<? extends JitProvider<T>> typeLiteral);
+  <T> AnnotatedJitBindingBuilder<T> bindJit(TypeLiteral<T> typeLiteral);
 
   /**
    * Binds a just-in-time provider. The injector will use the given just-in-time
@@ -399,16 +392,7 @@ public interface Binder {
    * @param key key of the just-in-time provider
    * @since 3.0?
    */
-  <T> SimplifiedScopedBindingBuilder bindJitProvider(Key<? extends JitProvider<T>> key);
-
-  /**
-   * Binds a just-in-time provider. The injector will use the given just-in-time
-   * provider to dynamically instantiate objects.
-   *
-   * @param jitProvider the just-in-time provider
-   * @since 3.0?
-   */
-  <T> SimplifiedScopedBindingBuilder bindJitProvider(JitProvider<T> jitProvider);
+  <T> LinkedJitBindingBuilder<T> bindJit(Key<T> key);
 
   /**
    * Returns a binder that uses {@code source} as the reference location for

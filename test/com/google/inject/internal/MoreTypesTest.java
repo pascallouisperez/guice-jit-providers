@@ -37,6 +37,7 @@ import junit.framework.TestCase;
 
 /**
  * @author schmitt@google.com (Peter Schmitt)
+ * @author pascal@kaching.com (Pascal-Louis Perez)
  */
 public class MoreTypesTest extends TestCase {
 

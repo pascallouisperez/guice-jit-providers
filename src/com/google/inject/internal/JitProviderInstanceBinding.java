@@ -20,6 +20,7 @@ import static com.google.inject.internal.Preconditions.checkNotNull;
 
 import com.google.inject.Binder;
 import com.google.inject.JitProvider;
+import com.google.inject.Key;
 
 /**
  * Just-in-time binding backed by an instance of a just-in-time provider.
@@ -28,19 +29,21 @@ import com.google.inject.JitProvider;
  * @since 3.0?
  */
 public final class JitProviderInstanceBinding<T> extends JitBindingImpl<T> {
-  private final JitProvider<T> jitProvider;
+  private final Key<T> key;
+  private final JitProvider<? extends T> jitProvider;
 
   public JitProviderInstanceBinding(
-      Object source, JitProvider<T> jitProvider) {
-    super(source);
+      Object source, Key<T> key, JitProvider<? extends T> jitProvider) {
+    super(source, key.getTypeLiteral().getType());
+    this.key = key;
     this.jitProvider = checkNotNull(jitProvider, "jit provider");
   }
 
-  public JitProvider<T> getJitProvider(InjectorImpl injector, Errors errors) {
+  public JitProvider<? extends T> getJitProvider(InjectorImpl injector, Errors errors) {
     return jitProvider;
   }
 
   public void applyTo(Binder binder) {
-    binder.withSource(getSource()).bindJitProvider(jitProvider);
+    getScoping().applyTo(binder.withSource(getSource()).bindJit(key).toJitProvider(jitProvider));
   }
 }

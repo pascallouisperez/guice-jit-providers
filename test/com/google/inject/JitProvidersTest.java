@@ -15,7 +15,9 @@ public class JitProvidersTest extends TestCase {
     assertExplicitJitProviderBinding(new AbstractModule() {
       @Override
       protected void configure() {
-        bindJitProvider(FactoryJitProvider.class).in(Singleton.class);
+        bindJit(new TypeLiteral<Factory<?>>() {})
+            .toJitProvider(FactoryJitProvider.class)
+            .in(Singleton.class);
       }
     });
   }
@@ -24,7 +26,9 @@ public class JitProvidersTest extends TestCase {
     assertExplicitJitProviderBinding(new AbstractModule() {
       @Override
       protected void configure() {
-        bindJitProvider(FactoryJitProvider.class).in(Scopes.SINGLETON);
+        bindJit(new TypeLiteral<Factory<?>>() {})
+            .toJitProvider(FactoryJitProvider.class)
+            .in(Scopes.SINGLETON);
       }
     });
   }
@@ -33,7 +37,9 @@ public class JitProvidersTest extends TestCase {
     assertExplicitJitProviderBinding(new AbstractModule() {
       @Override
       protected void configure() {
-        bindJitProvider(new FactoryJitProvider()).in(Singleton.class);
+        bindJit(new TypeLiteral<Factory<?>>() {})
+            .toJitProvider(FactoryJitProvider.class)
+            .in(Singleton.class);
       }
     });
   }
@@ -42,7 +48,9 @@ public class JitProvidersTest extends TestCase {
     assertExplicitJitProviderBinding(new AbstractModule() {
       @Override
       protected void configure() {
-        bindJitProvider(new FactoryJitProvider()).in(Scopes.SINGLETON);
+        bindJit(new TypeLiteral<Factory<?>>() {})
+            .toJitProvider(new FactoryJitProvider())
+            .in(Scopes.SINGLETON);
       }
     });
   }
@@ -71,7 +79,9 @@ public class JitProvidersTest extends TestCase {
     Injector injector = new InjectorBuilder().addModules(new AbstractModule() {
       @Override
       protected void configure() {
-        bindJitProvider(FactoryJitProvider.class).in(Singleton.class);
+        bindJit(new TypeLiteral<FactoryInterface<?>>() {})
+            .toJitProvider(FactoryJitProvider.class)
+            .in(Singleton.class);
       }
     }).build();
     Key<FactoryInterface<String>> key = Key.get(new TypeLiteral<FactoryInterface<String>>() {});
@@ -83,7 +93,9 @@ public class JitProvidersTest extends TestCase {
     assertExplicitJitProviderBinding(new AbstractModule() {
       @Override
       protected void configure() {
-        bindJitProvider(JitProviderRequiringInjection.class).in(Singleton.class);
+        bindJit(new TypeLiteral<Factory<?>>() {})
+            .toJitProvider(JitProviderRequiringInjection.class)
+            .in(Singleton.class);
       }
     });
   }
@@ -129,9 +141,6 @@ public class JitProvidersTest extends TestCase {
   }
 
   static class FactoryJitProvider implements JitProvider<Factory<?>> {
-    public boolean canProvide(Key<?> key) {
-      return FactoryInterface.class.isAssignableFrom(key.getTypeLiteral().getRawType());
-    }
     @SuppressWarnings("unchecked")
     public Factory<?> get(Key<Factory<?>> key) {
       TypeLiteral<?> typeLiteral = key.getTypeLiteral();
@@ -143,9 +152,6 @@ public class JitProvidersTest extends TestCase {
   
   static class JitProviderRequiringInjection extends FactoryJitProvider {
     @Inject Injector injector;
-    public boolean canProvide(Key<?> key) {
-      return injector != null && super.canProvide(key);
-    }
   }
 
 }

@@ -29,7 +29,6 @@ import java.util.Set;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binder;
 import com.google.inject.Binding;
-import com.google.inject.JitProvider;
 import com.google.inject.Key;
 import com.google.inject.MembersInjector;
 import com.google.inject.Module;
@@ -42,7 +41,8 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 import com.google.inject.binder.AnnotatedConstantBindingBuilder;
 import com.google.inject.binder.AnnotatedElementBuilder;
-import com.google.inject.binder.SimplifiedScopedBindingBuilder;
+import com.google.inject.binder.AnnotatedJitBindingBuilder;
+import com.google.inject.binder.LinkedJitBindingBuilder;
 import com.google.inject.internal.AbstractBindingBuilder;
 import com.google.inject.internal.BindingBuilder;
 import com.google.inject.internal.ConstantBindingBuilderImpl;
@@ -50,9 +50,6 @@ import com.google.inject.internal.Errors;
 import com.google.inject.internal.ExposureBuilder;
 import com.google.inject.internal.ImmutableList;
 import com.google.inject.internal.JitBindingBuilder;
-import com.google.inject.internal.JitBindingImpl;
-import com.google.inject.internal.JitProviderInstanceBinding;
-import com.google.inject.internal.LinkedJitProviderBinding;
 import com.google.inject.internal.Lists;
 import com.google.inject.internal.PrivateElementsImpl;
 import com.google.inject.internal.ProviderMethodsModule;
@@ -214,25 +211,12 @@ public final class Elements {
       elements.add(new TypeListenerBinding(getSource(), listener, typeMatcher));
     }
 
-    public <T> SimplifiedScopedBindingBuilder bindJitProvider(Class<? extends JitProvider<T>> type) {
-      return bindJitProvider(Key.get(type));
+    public <T> AnnotatedJitBindingBuilder<T> bindJit(TypeLiteral<T> typeLiteral) {
+      return new JitBindingBuilder<T>(Key.get(typeLiteral), elements, getSource());
     }
 
-    public <T> SimplifiedScopedBindingBuilder bindJitProvider(TypeLiteral<? extends JitProvider<T>> typeLiteral) {
-      return bindJitProvider(Key.get(typeLiteral));
-    }
-
-    public <T> SimplifiedScopedBindingBuilder bindJitProvider(Key<? extends JitProvider<T>> key) {
-      return createJitBindingBuilder(new LinkedJitProviderBinding<T>(getSource(), key));
-    }
-
-    public <T> SimplifiedScopedBindingBuilder bindJitProvider(JitProvider<T> jitProvider) {
-      return createJitBindingBuilder(new JitProviderInstanceBinding<T>(getSource(), jitProvider));
-    }
-
-    private JitBindingBuilder createJitBindingBuilder(JitBindingImpl<?> binding) {
-      elements.add(binding);
-      return new JitBindingBuilder(binding);
+    public <T> LinkedJitBindingBuilder<T> bindJit(Key<T> key) {
+      return new JitBindingBuilder<T>(key, elements, getSource());
     }
 
     public void requestStaticInjection(Class<?>... types) {

@@ -23,6 +23,7 @@ import com.google.inject.Stage;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.binder.ScopedBindingBuilder;
+import com.google.inject.binder.SimplifiedScopedBindingBuilder;
 import com.google.inject.spi.BindingScopingVisitor;
 import java.lang.annotation.Annotation;
 
@@ -51,7 +52,7 @@ public abstract class Scoping {
       return Scopes.NO_SCOPE.toString();
     }
 
-    public void applyTo(ScopedBindingBuilder scopedBindingBuilder) {
+    public void applyTo(SimplifiedScopedBindingBuilder scopedBindingBuilder) {
       // do nothing
     }
   };
@@ -69,7 +70,7 @@ public abstract class Scoping {
       return Singleton.class.getName();
     }
 
-    public void applyTo(ScopedBindingBuilder scopedBindingBuilder) {
+    public void applyTo(SimplifiedScopedBindingBuilder scopedBindingBuilder) {
       scopedBindingBuilder.in(Singleton.class);
     }
   };
@@ -87,7 +88,7 @@ public abstract class Scoping {
       return Scopes.SINGLETON.toString();
     }
 
-    public void applyTo(ScopedBindingBuilder scopedBindingBuilder) {
+    public void applyTo(SimplifiedScopedBindingBuilder scopedBindingBuilder) {
       scopedBindingBuilder.in(Scopes.SINGLETON);
     }
   };
@@ -105,8 +106,10 @@ public abstract class Scoping {
       return "eager singleton";
     }
 
-    public void applyTo(ScopedBindingBuilder scopedBindingBuilder) {
-      scopedBindingBuilder.asEagerSingleton();
+    public void applyTo(SimplifiedScopedBindingBuilder scopedBindingBuilder) {
+      // Cast is safe since JitProviders are the only one using a
+      // SimplifiedScopedBindingBuilder instead of a ScopedBindingBuilder.
+      ((ScopedBindingBuilder) scopedBindingBuilder).asEagerSingleton();
     }
   };
 
@@ -129,7 +132,7 @@ public abstract class Scoping {
         return scopingAnnotation.getName();
       }
 
-      public void applyTo(ScopedBindingBuilder scopedBindingBuilder) {
+      public void applyTo(SimplifiedScopedBindingBuilder scopedBindingBuilder) {
         scopedBindingBuilder.in(scopingAnnotation);
       }
     };
@@ -153,7 +156,7 @@ public abstract class Scoping {
         return scope.toString();
       }
 
-      public void applyTo(ScopedBindingBuilder scopedBindingBuilder) {
+      public void applyTo(SimplifiedScopedBindingBuilder scopedBindingBuilder) {
         scopedBindingBuilder.in(scope);
       }
     };
@@ -206,7 +209,7 @@ public abstract class Scoping {
 
   public abstract <V> V acceptVisitor(BindingScopingVisitor<V> visitor);
 
-  public abstract void applyTo(ScopedBindingBuilder scopedBindingBuilder);
+  public abstract void applyTo(SimplifiedScopedBindingBuilder scopedBindingBuilder);
 
   private Scoping() {}
 
