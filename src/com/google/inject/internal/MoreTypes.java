@@ -580,4 +580,109 @@ public class MoreTypes {
     /** Returns true if there are no type variables in this type. */
     boolean isFullySpecified();
   }
+
+  /**
+   * Verifies that ...
+   */
+  public static boolean isInstance(Type a, Type b) {
+    if (a instanceof Class<?>) {
+      return a.equals(b);
+    } else if (a instanceof GenericArrayType) {
+      // TODO
+    } else if (a instanceof ParameterizedType) {
+      if (!(b instanceof ParameterizedType)) {
+        return false;
+      }
+      ParameterizedType parameterizedTypeA = (ParameterizedType) a;
+      ParameterizedType parameterizedTypeB = (ParameterizedType) b;
+      Type[] actualTypeArgumentsA = parameterizedTypeA.getActualTypeArguments();
+      Type[] actualTypeArgumentsB = parameterizedTypeB.getActualTypeArguments();
+      if (!parameterizedTypeA.getRawType().equals(parameterizedTypeB.getRawType()) ||
+          actualTypeArgumentsA.length != actualTypeArgumentsB.length) {
+        return false;
+      }
+      for (int i = 0; i < actualTypeArgumentsA.length; i++) {
+        if (!isInstance(actualTypeArgumentsA[i], actualTypeArgumentsB[i])) {
+          return false;
+        }
+      }
+      return true;
+    } else if (a instanceof TypeVariable<?>) {
+      TypeVariable<?> typeVariable = (TypeVariable<?>) a;
+      for (Type bound : typeVariable.getBounds()) {
+        return isAssignableFrom(bound, b);
+      }
+      return true;
+    } else if (a instanceof WildcardType) {
+      WildcardType wildcardType = (WildcardType) a;
+      for (Type lowerBound : wildcardType.getLowerBounds()) {
+        if (!isAssignableFrom(b, lowerBound)) {
+          return false;
+        }
+      }
+      for (Type upperBound : wildcardType.getUpperBounds()) {
+        if (!isAssignableFrom(upperBound, b)) {
+          return false;
+        }
+      }
+      return true;
+    }
+    throw new IllegalStateException();
+  }
+
+  /**
+   * Equivalent of {@link Class#isAssignableFrom(Class)} at the {@link Type}
+   * level.
+   */
+  public static boolean isAssignableFrom(Type a, Type b) {
+    if (a instanceof Class<?>) {
+      Class<?> classA = (Class<?>) a;
+      if (b instanceof Class<?>) {
+        return classA.isAssignableFrom((Class<?>) b);
+      } else if (b instanceof GenericArrayType) {
+        // TODO
+      } else if (b instanceof ParameterizedType) {
+        return classA.isAssignableFrom((Class<?>) ((ParameterizedType) b).getRawType());
+      } else if (b instanceof TypeVariable<?>) {
+        // TODO
+      } else if (b instanceof WildcardType) {
+        // TODO
+      }
+      return false;
+    } else if (a instanceof GenericArrayType) {
+      // TODO
+    } else if (a instanceof ParameterizedType) {
+      ParameterizedType parameterizedTypeA = (ParameterizedType) a;
+      if (b instanceof Class<?>) {
+        return isAssignableFrom(parameterizedTypeA.getRawType(), b);
+      } else if (b instanceof ParameterizedType) {
+        ParameterizedType parameterizedTypeB = (ParameterizedType) b;
+        Type[] actualTypeArgumentsA = parameterizedTypeA.getActualTypeArguments();
+        Type[] actualTypeArgumentsB = parameterizedTypeB.getActualTypeArguments();
+        if (actualTypeArgumentsA.length != actualTypeArgumentsB.length) {
+          return false;
+        }
+        for (int i = 0; i < actualTypeArgumentsA.length; i++) {
+          if (!isInstance(actualTypeArgumentsA[i], actualTypeArgumentsB[i])) {
+            return false;
+          }
+        }
+        return isAssignableFrom(
+            parameterizedTypeA.getRawType(),
+            parameterizedTypeB.getRawType());
+      } else {
+        return false;
+      }
+    } else if (a instanceof TypeVariable<?>) {
+      for (Type bound : ((TypeVariable<?>) a).getBounds()) {
+        if (!isAssignableFrom(bound, b)) {
+          return false;
+        }
+      }
+      return true;
+    } else if (a instanceof WildcardType) {
+      // TODO
+    }
+    throw new IllegalStateException();
+  }
 }
