@@ -31,25 +31,25 @@ public interface LinkedJitBindingBuilder<T> extends SimplifiedScopedBindingBuild
   /**
    * See the EDSL examples at {@link com.google.inject.Binder}.
    */
-  SimplifiedScopedBindingBuilder toJitProvider(
+  SimplifiedScopedBindingBuilder toProvider(
       JitProvider<? extends T> jitProvider);
 
   /**
    * See the EDSL examples at {@link com.google.inject.Binder}.
    */
-  SimplifiedScopedBindingBuilder toJitProvider(
+  SimplifiedScopedBindingBuilder toProvider(
       Class<? extends JitProvider<? extends T>> jitProviderType);
 
   /**
    * See the EDSL examples at {@link com.google.inject.Binder}.
    */
-  SimplifiedScopedBindingBuilder toJitProvider(
+  SimplifiedScopedBindingBuilder toProvider(
       TypeLiteral<? extends JitProvider<? extends T>> jitProviderType);
 
   /**
    * See the EDSL examples at {@link com.google.inject.Binder}.
    */
-  SimplifiedScopedBindingBuilder toJitProvider(
+  SimplifiedScopedBindingBuilder toProvider(
       Key<? extends JitProvider<? extends T>> jitProviderType);
   
 }

@@ -16,7 +16,7 @@ public class JitProvidersTest extends TestCase {
       @Override
       protected void configure() {
         bindJit(new TypeLiteral<Factory<?>>() {})
-            .toJitProvider(FactoryJitProvider.class)
+            .toProvider(FactoryJitProvider.class)
             .in(Singleton.class);
       }
     });
@@ -27,7 +27,7 @@ public class JitProvidersTest extends TestCase {
       @Override
       protected void configure() {
         bindJit(new TypeLiteral<Factory<?>>() {})
-            .toJitProvider(FactoryJitProvider.class)
+            .toProvider(FactoryJitProvider.class)
             .in(Scopes.SINGLETON);
       }
     });
@@ -38,7 +38,7 @@ public class JitProvidersTest extends TestCase {
       @Override
       protected void configure() {
         bindJit(new TypeLiteral<Factory<?>>() {})
-            .toJitProvider(FactoryJitProvider.class)
+            .toProvider(FactoryJitProvider.class)
             .in(Singleton.class);
       }
     });
@@ -49,7 +49,7 @@ public class JitProvidersTest extends TestCase {
       @Override
       protected void configure() {
         bindJit(new TypeLiteral<Factory<?>>() {})
-            .toJitProvider(new FactoryJitProvider())
+            .toProvider(new FactoryJitProvider())
             .in(Scopes.SINGLETON);
       }
     });
@@ -80,7 +80,7 @@ public class JitProvidersTest extends TestCase {
       @Override
       protected void configure() {
         bindJit(new TypeLiteral<FactoryInterface<?>>() {})
-            .toJitProvider(FactoryJitProvider.class)
+            .toProvider(FactoryJitProvider.class)
             .in(Singleton.class);
       }
     }).build();
@@ -94,7 +94,7 @@ public class JitProvidersTest extends TestCase {
       @Override
       protected void configure() {
         bindJit(new TypeLiteral<Factory<?>>() {})
-            .toJitProvider(JitProviderRequiringInjection.class)
+            .toProvider(JitProviderRequiringInjection.class)
             .in(Singleton.class);
       }
     });

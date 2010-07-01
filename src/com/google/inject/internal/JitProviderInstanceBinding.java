@@ -44,6 +44,6 @@ public final class JitProviderInstanceBinding<T> extends JitBindingImpl<T> {
   }
 
   public void applyTo(Binder binder) {
-    getScoping().applyTo(binder.withSource(getSource()).bindJit(key).toJitProvider(jitProvider));
+    getScoping().applyTo(binder.withSource(getSource()).bindJit(key).toProvider(jitProvider));
   }
 }

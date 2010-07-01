@@ -65,23 +65,23 @@ public class JitBindingBuilder<T> implements AnnotatedJitBindingBuilder<T> {
     return this;
   }
 
-  public SimplifiedScopedBindingBuilder toJitProvider(
+  public SimplifiedScopedBindingBuilder toProvider(
       JitProvider<? extends T> jitProvider) {
     elements.add(binding = new JitProviderInstanceBinding<T>(source, key, jitProvider));
     return this;
   }
 
-  public SimplifiedScopedBindingBuilder toJitProvider(
+  public SimplifiedScopedBindingBuilder toProvider(
       Class<? extends JitProvider<? extends T>> jitProviderType) {
-    return toJitProvider(Key.get(jitProviderType));
+    return toProvider(Key.get(jitProviderType));
   }
 
-  public SimplifiedScopedBindingBuilder toJitProvider(
+  public SimplifiedScopedBindingBuilder toProvider(
       TypeLiteral<? extends JitProvider<? extends T>> jitProviderType) {
-    return toJitProvider(Key.get(jitProviderType));
+    return toProvider(Key.get(jitProviderType));
   }
 
-  public SimplifiedScopedBindingBuilder toJitProvider(
+  public SimplifiedScopedBindingBuilder toProvider(
       Key<? extends JitProvider<? extends T>> jitProviderType) {
     elements.add(binding = new LinkedJitProviderBinding<T>(source, key, jitProviderType));
     return this;
