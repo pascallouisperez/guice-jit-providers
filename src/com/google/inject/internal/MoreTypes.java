@@ -654,7 +654,13 @@ public class MoreTypes {
       } else if (b instanceof TypeVariable<?>) {
         // TODO
       } else if (b instanceof WildcardType) {
-        // TODO
+        WildcardType wildcardTypeB = (WildcardType) b;
+        for (Type upperBound : wildcardTypeB.getUpperBounds()) {
+          if (!isAssignableFrom(a, upperBound)) {
+            return false;
+          }
+        }
+        return true;
       }
     } else if (a instanceof GenericArrayType) {
       if (b instanceof GenericArrayType) {
@@ -690,7 +696,15 @@ public class MoreTypes {
       }
       return true;
     } else if (a instanceof WildcardType) {
-      // TODO
+      WildcardType wildcardType = (WildcardType) a;
+      boolean isBottomType = true;
+      for (Type lowerBound : wildcardType.getLowerBounds()) {
+        isBottomType = false;
+        if (!isAssignableFrom(lowerBound, b)) {
+          return false;
+        }
+      }
+      return !isBottomType;
     }
     return false;
   }

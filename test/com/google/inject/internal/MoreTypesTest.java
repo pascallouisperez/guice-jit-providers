@@ -158,6 +158,21 @@ public class MoreTypesTest extends TestCase {
 
     assertFalse(MoreTypes.isAssignableFrom(new TypeVariableImpl(List.class,
         Set.class), TreeSet.class));
+    
+    // wildcard type
+    assertTrue(MoreTypes.isAssignableFrom(
+        Types.supertypeOf(Collection.class), Types.subtypeOf(List.class)));
+    assertTrue(MoreTypes.isAssignableFrom(
+        Types.supertypeOf(Collection.class), Types.listOf(Integer.class)));
+    assertTrue(MoreTypes.isAssignableFrom(
+        Types.supertypeOf(new TypeLiteral<Collection<? extends Number>>() {}.getType()),
+        Types.listOf(Integer.class)));
+    
+    assertFalse(MoreTypes.isAssignableFrom(
+        Types.subtypeOf(Object.class), Types.subtypeOf(Object.class)));
+    assertFalse(MoreTypes.isAssignableFrom(
+        Types.supertypeOf(new TypeLiteral<Collection<? extends Number>>() {}.getType()),
+        Types.listOf(String.class)));
   }
 
   static class TypeVariableImpl implements TypeVariable<GenericDeclaration> {
