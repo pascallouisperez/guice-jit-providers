@@ -589,7 +589,13 @@ public class MoreTypes {
     if (a instanceof Class<?>) {
       return a.equals(b);
     } else if (a instanceof GenericArrayType) {
-      // TODO
+      if (b instanceof GenericArrayType) {
+        return isInstance(
+            ((GenericArrayType) a).getGenericComponentType(),
+            ((GenericArrayType) b).getGenericComponentType());
+      } else {
+        return false;
+      }
     } else if (a instanceof ParameterizedType) {
       if (!(b instanceof ParameterizedType)) {
         return false;
@@ -641,7 +647,8 @@ public class MoreTypes {
       if (b instanceof Class<?>) {
         return classA.isAssignableFrom((Class<?>) b);
       } else if (b instanceof GenericArrayType) {
-        // TODO
+        return classA.isArray() && isAssignableFrom(
+            classA.getComponentType(), ((GenericArrayType) b).getGenericComponentType());
       } else if (b instanceof ParameterizedType) {
         return classA.isAssignableFrom((Class<?>) ((ParameterizedType) b).getRawType());
       } else if (b instanceof TypeVariable<?>) {
@@ -649,9 +656,12 @@ public class MoreTypes {
       } else if (b instanceof WildcardType) {
         // TODO
       }
-      return false;
     } else if (a instanceof GenericArrayType) {
-      // TODO
+      if (b instanceof GenericArrayType) {
+        return isAssignableFrom(
+            ((GenericArrayType) a).getGenericComponentType(),
+            ((GenericArrayType) b).getGenericComponentType());
+      }
     } else if (a instanceof ParameterizedType) {
       ParameterizedType parameterizedTypeA = (ParameterizedType) a;
       if (b instanceof Class<?>) {
@@ -671,8 +681,6 @@ public class MoreTypes {
         return isAssignableFrom(
             parameterizedTypeA.getRawType(),
             parameterizedTypeB.getRawType());
-      } else {
-        return false;
       }
     } else if (a instanceof TypeVariable<?>) {
       for (Type bound : ((TypeVariable<?>) a).getBounds()) {
@@ -684,6 +692,6 @@ public class MoreTypes {
     } else if (a instanceof WildcardType) {
       // TODO
     }
-    throw new IllegalStateException();
+    return false;
   }
 }

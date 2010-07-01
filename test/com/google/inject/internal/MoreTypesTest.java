@@ -21,6 +21,7 @@ import com.google.inject.internal.MoreTypes.WildcardTypeImpl;
 import com.google.inject.util.Types;
 
 import java.io.Serializable;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.GenericDeclaration;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -72,6 +73,9 @@ public class MoreTypesTest extends TestCase {
     assertFalse(MoreTypes.isInstance(List.class, String.class));
     
     // generic array type
+    assertTrue(MoreTypes.isInstance(
+        new TypeLiteral<List<?>[]>() {}.getType(),
+        new TypeLiteral<List<Integer>[]>() {}.getType()));
     
     // parameterized type
     assertTrue(MoreTypes.isInstance(
@@ -100,10 +104,32 @@ public class MoreTypesTest extends TestCase {
     assertTrue(MoreTypes.isAssignableFrom(Serializable.class, String.class));
     assertTrue(MoreTypes.isAssignableFrom(Set.class, HashSet.class));
     assertTrue(MoreTypes.isAssignableFrom(Object.class, Types.listOf(String.class)));
-    
+    assertTrue(MoreTypes.isAssignableFrom(
+        List[].class, new TypeLiteral<List<?>[]>() {}.getType()));
+    assertTrue(MoreTypes.isAssignableFrom(
+        ArrayList[].class, new TypeLiteral<ArrayList<?>[]>() {}.getType()));
+
     assertFalse(MoreTypes.isAssignableFrom(Set.class, List.class));
+    assertFalse(MoreTypes.isAssignableFrom(
+        ArrayList[].class, new TypeLiteral<List<?>[]>() {}.getType()));
 
     // generic array type
+    assertTrue(MoreTypes.isAssignableFrom(
+        new TypeLiteral<List<?>[]>() {}.getType(),
+        new TypeLiteral<List<Integer>[]>() {}.getType()));
+    assertTrue(MoreTypes.isAssignableFrom(
+        new TypeLiteral<List<Integer>[]>() {}.getType(),
+        new TypeLiteral<ArrayList<Integer>[]>() {}.getType()));
+    assertTrue(MoreTypes.isAssignableFrom(
+        new TypeLiteral<List<? extends Set<?>>[]>() {}.getType(),
+        new TypeLiteral<ArrayList<TreeSet<Double>>[]>() {}.getType()));
+
+    assertFalse(MoreTypes.isAssignableFrom(
+        new TypeLiteral<List<?>[]>() {}.getType(), boolean[].class));
+    assertFalse(MoreTypes.isAssignableFrom(
+        new TypeLiteral<List<?>[]>() {}.getType(), Collection[].class));
+    assertFalse(MoreTypes.isAssignableFrom(
+        new TypeLiteral<List<?>[]>() {}.getType(), List[].class));
 
     // parameterized type
     assertTrue(MoreTypes.isAssignableFrom(Types.listOf(String.class),
