@@ -652,7 +652,13 @@ public class MoreTypes {
       } else if (b instanceof ParameterizedType) {
         return classA.isAssignableFrom((Class<?>) ((ParameterizedType) b).getRawType());
       } else if (b instanceof TypeVariable<?>) {
-        // TODO
+        TypeVariable<?> typeVariableB = (TypeVariable<?>) b;
+        for (Type upperBound : typeVariableB.getBounds()) {
+          if (!isAssignableFrom(a, upperBound)) {
+            return false;
+          }
+        }
+        return true;
       } else if (b instanceof WildcardType) {
         WildcardType wildcardTypeB = (WildcardType) b;
         for (Type upperBound : wildcardTypeB.getUpperBounds()) {
