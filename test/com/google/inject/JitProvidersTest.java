@@ -1,6 +1,10 @@
 package com.google.inject;
 
+import static com.google.inject.internal.Preconditions.checkNotNull;
+
 import java.lang.reflect.ParameterizedType;
+
+import com.google.inject.internal.Preconditions;
 
 import junit.framework.TestCase;
 
@@ -141,8 +145,10 @@ public class JitProvidersTest extends TestCase {
   }
 
   static class FactoryJitProvider implements JitProvider<Factory<?>> {
+    @Inject Injector injector;
     @SuppressWarnings("unchecked")
     public Factory<?> get(Key<Factory<?>> key) {
+      checkNotNull(injector, "must have field injection in instantiated JIT Providers");
       TypeLiteral<?> typeLiteral = key.getTypeLiteral();
       ParameterizedType parametrizedType = (ParameterizedType) typeLiteral.getType();
       Class klass = (Class) parametrizedType.getActualTypeArguments()[0];

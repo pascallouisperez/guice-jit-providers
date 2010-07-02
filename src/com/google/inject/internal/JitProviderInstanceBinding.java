@@ -40,6 +40,7 @@ public final class JitProviderInstanceBinding<T> extends JitBindingImpl<T> {
   }
 
   public JitProvider<? extends T> getJitProvider(InjectorImpl injector, Errors errors) {
+    injector.injectMembers(jitProvider);
     return jitProvider;
   }
 
