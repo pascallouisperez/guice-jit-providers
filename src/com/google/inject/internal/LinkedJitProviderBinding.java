@@ -32,11 +32,13 @@ import com.google.inject.Provider;
  * @since 3.0?
  */
 public final class LinkedJitProviderBinding<T> extends JitBindingImpl<T> {
+  private final Key<T> key;
   private final Key<? extends JitProvider<? extends T>> jitProviderKey;
 
   public LinkedJitProviderBinding(
-      Object source, Key<?> key, Key<? extends JitProvider<? extends T>> jitProviderKey) {
+      Object source, Key<T> key, Key<? extends JitProvider<? extends T>> jitProviderKey) {
     super(source, key.getTypeLiteral().getType());
+    this.key = key;
     this.jitProviderKey = checkNotNull(jitProviderKey, "jit provider key");
   }
 
@@ -50,6 +52,6 @@ public final class LinkedJitProviderBinding<T> extends JitBindingImpl<T> {
   }
 
   public void applyTo(Binder binder) {
-    getScoping().applyTo(binder.withSource(getSource()).bindJit(jitProviderKey));
+    getScoping().applyTo(binder.withSource(getSource()).bindJit(key).toProvider(jitProviderKey));
   }
 }
