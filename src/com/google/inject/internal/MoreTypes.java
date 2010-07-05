@@ -703,14 +703,13 @@ public class MoreTypes {
       return true;
     } else if (a instanceof WildcardType) {
       WildcardType wildcardType = (WildcardType) a;
-      boolean isBottomType = true;
-      for (Type lowerBound : wildcardType.getLowerBounds()) {
-        isBottomType = false;
+      Type[] lowerBounds = wildcardType.getLowerBounds();
+      for (Type lowerBound : lowerBounds) {
         if (!isAssignableFrom(lowerBound, b)) {
           return false;
         }
       }
-      return !isBottomType;
+      return lowerBounds.length != 0;
     }
     return false;
   }
