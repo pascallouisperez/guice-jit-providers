@@ -103,7 +103,7 @@ public class MoreTypes {
   /**
    * Returns true if {@code type} is free from type variables.
    */
-  private static boolean isFullySpecified(Type type) {
+  public static boolean isFullySpecified(Type type) {
     if (type instanceof Class) {
       return true;
 
@@ -583,7 +583,7 @@ public class MoreTypes {
   }
 
   /**
-   * Verifies that ...
+   * Verifies that {@code b} is an instance of the type scheme {@code a}.
    */
   public static boolean isInstance(Type a, Type b) {
     if (a instanceof Class<?>) {
