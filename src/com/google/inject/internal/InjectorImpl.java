@@ -786,20 +786,6 @@ final class InjectorImpl implements Injector, Lookups {
       return convertedBinding;
     }
 
-    // If the key has an annotation...
-    if (key.getAnnotationType() != null) {
-      // Look for a binding without annotation attributes or return null.
-      if (key.hasAttributes()) {
-        try {
-          Errors ignored = new Errors();
-          return getBindingOrThrow(key.withoutAttributes(), ignored, JitLimitation.NO_JIT);
-        } catch (ErrorsException ignored) {
-          // throw with a more appropriate message below
-        }
-      }
-      throw errors.missingImplementation(key).toException();
-    }
-
     Object source = key.getTypeLiteral().getRawType();
 
     // Try to use a just-in-time provider

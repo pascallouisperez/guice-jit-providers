@@ -37,7 +37,7 @@ public final class LinkedJitProviderBinding<T> extends JitBindingImpl<T> {
 
   public LinkedJitProviderBinding(
       Object source, Key<T> key, Key<? extends JitProvider<? extends T>> jitProviderKey) {
-    super(source, key.getTypeLiteral().getType());
+    super(source, key);
     this.key = key;
     this.jitProviderKey = checkNotNull(jitProviderKey, "jit provider key");
   }

@@ -34,7 +34,7 @@ public final class JitProviderInstanceBinding<T> extends JitBindingImpl<T> {
 
   public JitProviderInstanceBinding(
       Object source, Key<T> key, JitProvider<? extends T> jitProvider) {
-    super(source, key.getTypeLiteral().getType());
+    super(source, key);
     this.key = key;
     this.jitProvider = checkNotNull(jitProvider, "jit provider");
   }

@@ -18,6 +18,7 @@ package com.google.inject.internal;
 
 import static com.google.inject.internal.Preconditions.checkNotNull;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 import com.google.inject.JitBinding;
@@ -31,21 +32,31 @@ import com.google.inject.spi.ElementVisitor;
  *
  */
 public abstract class JitBindingImpl<T> implements JitBinding<T> {
+  private final Key<T> key;
   private final Object source;
   private final Type typeScheme;
   private Scoping scoping;
 
-  protected JitBindingImpl(Object source, Type typeScheme) {
-    this.typeScheme = typeScheme;
+  protected JitBindingImpl(Object source, Key<T> key) {
+    this.key = key;
+    this.typeScheme = key.getTypeLiteral().getType();
     this.source = checkNotNull(source, "source");
     this.scoping = Scoping.UNSCOPED;
   }
   
   @Override
-  public boolean canProvide(Key<?> key) {
-    return MoreTypes.isInstance(typeScheme, key.getTypeLiteral().getType());
+  public boolean canProvide(Key<?> actualKey) {
+    if (key.hasAttributes()) {
+      return Objects.equal(key.getAnnotationType(), actualKey.getAnnotationType()) &&
+          Objects.equal(key.getAnnotation(), actualKey.getAnnotation()) &&
+          MoreTypes.isInstance(typeScheme, actualKey.getTypeLiteral().getType());
+    } else {
+      // attributes don't have to match
+      return Objects.equal(key.getAnnotationType(), actualKey.getAnnotationType()) &&
+          MoreTypes.isInstance(typeScheme, actualKey.getTypeLiteral().getType());
+    }
   }
-
+  
   public abstract JitProvider<? extends T> getJitProvider(InjectorImpl injector, Errors errors);
 
   public void withScoping(Scoping scoping) {

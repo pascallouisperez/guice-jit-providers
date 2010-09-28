@@ -1,10 +1,14 @@
 package com.google.inject;
 
 import static com.google.inject.internal.Preconditions.checkNotNull;
+import static com.google.inject.name.Names.named;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.Retention;
 import java.lang.reflect.ParameterizedType;
+
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 
 import junit.framework.TestCase;
 
@@ -66,19 +70,48 @@ public class JitProvidersTest extends TestCase {
     check(injector, key);
   }
   
-  public void failingExplicitAnnotatedJitProviderBinding() throws Exception {
+  public void testExplicitAnnotatedJitProviderBinding() throws Exception {
     Injector injector = new InjectorBuilder().addModules(new AbstractModule() {
       @Override
       protected void configure() {
         bindJit(new TypeLiteral<Factory<?>>() {})
             .annotatedWith(AnAnnotation.class)
-            .toProvider(new FactoryJitProvider());
+            .toProvider(new FactoryJitProvider())
+            .in(Singleton.class);
       }
     }).build();
-    Key<Factory<String>> key = Key.get(
-        new TypeLiteral<Factory<String>>() {}, AnAnnotation.class);
-
-    check(injector, key);
+    check(injector, Key.get(new TypeLiteral<Factory<String>>() {}, AnAnnotation.class));
+    checkNoBinding(injector, Key.get(new TypeLiteral<Factory<String>>() {}));
+  }
+  
+  public void testExplicitNamedAnnotatedJitProviderBinding() throws Exception {
+    Injector injector = new InjectorBuilder().addModules(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bindJit(new TypeLiteral<Factory<?>>() {})
+            .annotatedWith(named("foo"))
+            .toProvider(new FactoryJitProvider())
+            .in(Singleton.class);
+      }
+    }).build();
+    check(injector, Key.get(new TypeLiteral<Factory<String>>() {}, named("foo")));
+    checkNoBinding(injector, Key.get(new TypeLiteral<Factory<String>>() {}, named("bar")));
+    checkNoBinding(injector, Key.get(new TypeLiteral<Factory<String>>() {}));
+  }
+  
+  public void testExplicitAttributelessNamedAnnotatedJitProviderBinding3() throws Exception {
+    Injector injector = new InjectorBuilder().addModules(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bindJit(new TypeLiteral<Factory<?>>() {})
+            .annotatedWith(Named.class)
+            .toProvider(new FactoryJitProvider())
+            .in(Singleton.class);
+      }
+    }).build();
+    check(injector, Key.get(new TypeLiteral<Factory<String>>() {}, named("foo")));
+    check(injector, Key.get(new TypeLiteral<Factory<String>>() {}, named("bar")));
+    checkNoBinding(injector, Key.get(new TypeLiteral<Factory<String>>() {}));
   }
 
   public void testImplicitJitProviderBinding() {
@@ -129,6 +162,14 @@ public class JitProvidersTest extends TestCase {
 
     // scoping
     assertTrue("scoping is incorrect", instance1 == instance2);
+  }
+  
+  private void checkNoBinding(Injector injector, Key<? extends FactoryInterface<String>> key) {
+    try {
+      injector.getInstance(key);
+      fail();
+    } catch (ConfigurationException e) {
+    }
   }
 
   interface FactoryInterface<T> {
