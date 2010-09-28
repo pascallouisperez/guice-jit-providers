@@ -1,10 +1,10 @@
 package com.google.inject;
 
 import static com.google.inject.internal.Preconditions.checkNotNull;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import java.lang.annotation.Retention;
 import java.lang.reflect.ParameterizedType;
-
-import com.google.inject.internal.Preconditions;
 
 import junit.framework.TestCase;
 
@@ -62,6 +62,21 @@ public class JitProvidersTest extends TestCase {
   private void assertExplicitJitProviderBinding(AbstractModule module) {
     Injector injector = new InjectorBuilder().addModules(module).build();
     Key<Factory<String>> key = Key.get(new TypeLiteral<Factory<String>>() {});
+
+    check(injector, key);
+  }
+  
+  public void failingExplicitAnnotatedJitProviderBinding() throws Exception {
+    Injector injector = new InjectorBuilder().addModules(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bindJit(new TypeLiteral<Factory<?>>() {})
+            .annotatedWith(AnAnnotation.class)
+            .toProvider(new FactoryJitProvider());
+      }
+    }).build();
+    Key<Factory<String>> key = Key.get(
+        new TypeLiteral<Factory<String>>() {}, AnAnnotation.class);
 
     check(injector, key);
   }
@@ -158,6 +173,11 @@ public class JitProvidersTest extends TestCase {
   
   static class JitProviderRequiringInjection extends FactoryJitProvider {
     @Inject Injector injector;
+  }
+
+  @BindingAnnotation
+  @Retention(RUNTIME)
+  static @interface AnAnnotation {
   }
 
 }
