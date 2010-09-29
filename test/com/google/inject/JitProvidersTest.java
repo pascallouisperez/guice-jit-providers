@@ -84,7 +84,7 @@ public class JitProvidersTest extends TestCase {
     checkNoBinding(injector, Key.get(new TypeLiteral<Factory<String>>() {}));
   }
   
-  public void testExplicitNamedAnnotatedJitProviderBinding() throws Exception {
+  public void testExplicitNamedJitProviderBinding() throws Exception {
     Injector injector = new InjectorBuilder().addModules(new AbstractModule() {
       @Override
       protected void configure() {
@@ -99,7 +99,7 @@ public class JitProvidersTest extends TestCase {
     checkNoBinding(injector, Key.get(new TypeLiteral<Factory<String>>() {}));
   }
   
-  public void testExplicitAttributelessNamedAnnotatedJitProviderBinding3() throws Exception {
+  public void testExplicitAttributelessNamedJitProviderBinding() throws Exception {
     Injector injector = new InjectorBuilder().addModules(new AbstractModule() {
       @Override
       protected void configure() {

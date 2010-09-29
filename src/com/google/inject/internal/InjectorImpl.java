@@ -16,6 +16,8 @@
 
 package com.google.inject.internal;
 
+import static java.lang.String.format;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationTargetException;
@@ -65,10 +67,12 @@ final class InjectorImpl implements Injector, Lookups {
   enum JitLimitation {
     /** does not allow just in time bindings */
     NO_JIT,
+    /** does not allow user-defined just in time bindings */
+    NO_USER_DEFINED_JIT,
     /** allows existing just in time bindings, but does not allow new ones */
     EXISTING_JIT,
     /** allows existing just in time bindings & allows new ones to be created */
-    NEW_OR_EXISTING_JIT,
+    NEW_OR_EXISTING_JIT
   }
 
   final State state;
@@ -205,7 +209,6 @@ final class InjectorImpl implements Injector, Lookups {
   private <T> BindingImpl<T> getJustInTimeBinding(Key<T> key, Errors errors, JitLimitation jitType)
       throws ErrorsException {
 
-
     if(options.jitDisabled && jitType == JitLimitation.NO_JIT && !isProvider(key)) {
       throw errors.jitDisabled(key).toException();
     }
@@ -224,7 +227,7 @@ final class InjectorImpl implements Injector, Lookups {
       if(options.jitDisabled && jitType != JitLimitation.NEW_OR_EXISTING_JIT && !isProvider(key)) {
         throw errors.jitDisabled(key).toException();
       } else {
-        return createJustInTimeBindingRecursive(key, errors);
+        return createJustInTimeBindingRecursive(key, errors, jitType);
       }
     }
   }
@@ -721,12 +724,12 @@ final class InjectorImpl implements Injector, Lookups {
    * Attempts to create a just-in-time binding for {@code key} in the root injector, falling back to
    * other ancestor injectors until this injector is tried.
    */
-  private <T> BindingImpl<T> createJustInTimeBindingRecursive(Key<T> key, Errors errors)
+  private <T> BindingImpl<T> createJustInTimeBindingRecursive(Key<T> key, Errors errors, JitLimitation jitType)
       throws ErrorsException {
     // ask the parent to create the JIT binding
     if (parent != null && !parent.options.jitDisabled) {
       try {
-        return parent.createJustInTimeBindingRecursive(key, new Errors());
+        return parent.createJustInTimeBindingRecursive(key, new Errors(), jitType);
       } catch (ErrorsException ignored) {
       }
     }
@@ -735,7 +738,7 @@ final class InjectorImpl implements Injector, Lookups {
       throw errors.childBindingAlreadySet(key).toException();
     }
 
-    BindingImpl<T> binding = createJustInTimeBinding(key, errors);
+    BindingImpl<T> binding = createJustInTimeBinding(key, errors, jitType);
     state.parent().blacklist(key);
     jitBindings.put(key, binding);
     return binding;
@@ -754,7 +757,7 @@ final class InjectorImpl implements Injector, Lookups {
    *
    * @throws com.google.inject.internal.ErrorsException if the binding cannot be created.
    */
-  private <T> BindingImpl<T> createJustInTimeBinding(Key<T> key, Errors errors)
+  private <T> BindingImpl<T> createJustInTimeBinding(Key<T> key, Errors errors, JitLimitation jitType)
       throws ErrorsException {
     int numErrorsBefore = errors.size();
 
@@ -788,8 +791,24 @@ final class InjectorImpl implements Injector, Lookups {
 
     Object source = key.getTypeLiteral().getRawType();
 
+    // If the key has an annotation...
+    boolean failIfNoJitBinding = false;
+    if (key.getAnnotationType() != null) {
+      // Look for a binding without annotation attributes or return null.
+      if (key.hasAttributes()) {
+        try {
+          Errors ignored = new Errors();
+          return getBindingOrThrow(key.withoutAttributes(), ignored, JitLimitation.NO_USER_DEFINED_JIT);
+        } catch (ErrorsException ignored) {
+          // throw with a more appropriate message below
+        }
+      }
+      failIfNoJitBinding = true;
+    }
+    
     // Try to use a just-in-time provider
-    if (!JitProvider.class.isAssignableFrom(key.getTypeLiteral().getRawType())) {
+    if (!JitProvider.class.isAssignableFrom(key.getTypeLiteral().getRawType()) 
+        && jitType != JitLimitation.NO_USER_DEFINED_JIT) {
       /* Note: we cannot allow a just-in-time provider to be provided
        * just-in-time. Since an instance of a jit provider is required to
        * determine whether it could be provided or not, allowing jit providers
@@ -803,6 +822,10 @@ final class InjectorImpl implements Injector, Lookups {
               source, errors, jitBinding.getScoping());
         }
       }
+    }
+    
+    if (failIfNoJitBinding) {
+      throw errors.missingImplementation(key).toException();
     }
 
     BindingImpl<T> binding = createUninitializedBinding(key, Scoping.UNSCOPED, source, errors, true);
